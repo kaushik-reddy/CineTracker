@@ -71,7 +71,8 @@ export default function PricingPage() {
         config_key: 'upi_payment_config',
         category: 'payment'
       });
-      return configs[0]?.config_value || null;
+      // Return found config or a safe default structure to prevent loading errors
+      return configs[0]?.config_value || { upi_id: '', qr_code_url: '' };
     }
   });
 
@@ -230,8 +231,8 @@ export default function PricingPage() {
               <Card
                 key={plan.id}
                 className={`relative overflow-hidden border-2 transition-all duration-300 ${isYearly
-                    ? 'bg-gradient-to-br from-purple-900/40 to-emerald-900/40 border-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.3)] scale-105'
-                    : 'bg-zinc-900/80 border-zinc-800 hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.2)]'
+                  ? 'bg-gradient-to-br from-purple-900/40 to-emerald-900/40 border-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.3)] scale-105'
+                  : 'bg-zinc-900/80 border-zinc-800 hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.2)]'
                   }`}
               >
                 {isYearly && (
@@ -317,10 +318,10 @@ export default function PricingPage() {
                     onClick={() => handleSelectPlan(plan)}
                     disabled={isCurrentPlan || processingPlanId === plan.id}
                     className={`w-full mt-6 ${isYearly
-                        ? 'bg-gradient-to-r from-purple-500 to-emerald-500 hover:from-purple-600 hover:to-emerald-600 text-white'
-                        : isCurrentPlan
-                          ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
-                          : 'bg-white hover:bg-zinc-100 text-black'
+                      ? 'bg-gradient-to-r from-purple-500 to-emerald-500 hover:from-purple-600 hover:to-emerald-600 text-white'
+                      : isCurrentPlan
+                        ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                        : 'bg-white hover:bg-zinc-100 text-black'
                       }`}
                   >
                     {processingPlanId === plan.id ? (

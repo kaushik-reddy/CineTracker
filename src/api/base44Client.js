@@ -2,9 +2,13 @@ import { appParams } from '@/lib/app-params';
 import { localBase44 } from './localStorageMock';
 import { supabaseAdapter } from './supabaseAdapter';
 
-const VITE_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
-const VITE_SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const hasSupabase = VITE_SUPABASE_URL && VITE_SUPABASE_ANON_KEY;
+// Hard-coded fallbacks
+const FALLBACK_URL = 'https://rbntfzzlzqgdeskhqbza.supabase.co';
+const FALLBACK_KEY = 'sb_publishable_GpaxgZeqjvOYX7OlWV5kmA_Fhzivl9s';
+
+const VITE_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL || FALLBACK_URL;
+const VITE_SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || FALLBACK_KEY;
+const hasSupabase = !!(VITE_SUPABASE_URL && VITE_SUPABASE_ANON_KEY);
 
 // Check if we should use local mock (force offline or missing keys)
 // If supabase keys are present, we default to using them (Shared Data Mode)

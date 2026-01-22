@@ -173,12 +173,43 @@ const auth = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
 
-        // Map Supabase user to App user structure
+        // Fetch application user record
+        let appUser = null;
+        try {
+            const users = await entitiesProxy.User.filter({ id: user.id });
+            if (users && users.length > 0) appUser = users[0];
+        } catch (e) {
+            // Ignore fetch error, will create default
+        }
+
+        // Determine role logic
+        let role = appUser?.role || 'user';
+
+        // Fallback for bootstrap admin if valid and not yet set
+        if (!appUser && user.email?.toLowerCase() === 'kaushik4432@gmail.com') {
+            role = 'admin';
+        }
+
+        if (!appUser) {
+            // Create user record on first login
+            try {
+                const newUser = {
+                    id: user.id,
+                    email: user.email,
+                    role: role,
+                    name: user.user_metadata?.full_name || user.email?.split('@')[0],
+                    created_at: new Date().toISOString()
+                };
+                appUser = await entitiesProxy.User.create(newUser);
+            } catch (e) { console.error('Failed to create user record', e); }
+        }
+
         return {
             id: user.id,
             email: user.email,
-            name: user.user_metadata?.full_name || user.email?.split('@')[0],
-            role: localStorage.getItem('cinetracker_role_preference') || (user.email?.toLowerCase() === 'kaushik4432@gmail.com' ? 'admin' : 'user')
+            name: appUser?.name || user.user_metadata?.full_name || user.email?.split('@')[0],
+            role: appUser?.role || role,
+            ...appUser
         };
     },
     logout: async () => {

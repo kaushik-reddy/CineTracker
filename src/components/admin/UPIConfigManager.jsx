@@ -373,10 +373,10 @@ export default function UPIConfigManager() {
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={saveMutation.isPending}
+                disabled={saveMutation.isPending || uploading}
                 className="flex-1 bg-gradient-to-r from-purple-500 to-emerald-500 hover:from-purple-600 hover:to-emerald-600"
               >
-                {saveMutation.isPending ? (
+                {saveMutation.isPending || uploading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>

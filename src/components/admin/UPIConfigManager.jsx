@@ -82,18 +82,26 @@ export default function UPIConfigManager() {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
+      console.log('🔄 Mutation started with data:', data);
       let newList = [...upiAccounts];
       if (editingAccount) {
         newList = newList.map(acc => acc.id === editingAccount.id ? { ...data, id: acc.id } : acc);
       } else {
         newList.push({ ...data, id: Date.now().toString(), created_date: new Date().toISOString() });
       }
+      console.log('📝 New list prepared:', newList);
       await saveList(newList);
+      console.log('✅ saveList completed');
     },
     onSuccess: () => {
+      console.log('✅ Mutation onSuccess triggered');
       queryClient.invalidateQueries({ queryKey: ['upi-accounts-config'] });
       toast.success(editingAccount ? 'UPI account updated!' : 'UPI account added!');
       handleCloseDialog();
+    },
+    onError: (error) => {
+      console.error('❌ Mutation onError triggered:', error);
+      toast.error('Failed to save: ' + (error.message || 'Unknown error'));
     }
   });
 
@@ -154,11 +162,22 @@ export default function UPIConfigManager() {
   };
 
   const handleSave = () => {
+    console.log('🔘 Add button clicked!');
+    console.log('📋 Current formData:', formData);
+    console.log('Validation check:');
+    console.log('  - upi_id:', formData.upi_id, '(valid:', !!formData.upi_id, ')');
+    console.log('  - qr_code_url:', formData.qr_code_url?.substring(0, 50), '(valid:', !!formData.qr_code_url, ')');
+    console.log('  - account_holder_name:', formData.account_holder_name, '(valid:', !!formData.account_holder_name, ')');
+
     if (!formData.upi_id || !formData.qr_code_url || !formData.account_holder_name) {
+      console.log('❌ Validation failed!');
       toast.error('Please provide all required fields');
       return;
     }
+
+    console.log('✅ Validation passed, calling mutation...');
     saveMutation.mutate(formData);
+    console.log('🚀 Mutation called');
   };
 
   const handleEdit = (account) => {

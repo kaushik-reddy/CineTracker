@@ -235,7 +235,16 @@ export default function UPIConfigManager() {
                       src={account.qr_code_url}
                       alt="UPI QR"
                       className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML += '<span class="text-xs text-red-500">Img Error</span>';
+                      }}
                     />
+                  </div>
+
+                  {/* Debug Info for Image */}
+                  <div className="hidden">
+                    Debug: {account.qr_code_url?.substring(0, 30)}... ({account.qr_code_url?.length} chars)
                   </div>
 
                   {/* Account Details */}

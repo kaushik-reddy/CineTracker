@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from "@/utils";
-import { Home, Library, Calendar, History, BarChart3, Trophy, User, Shield, Menu, X, DollarSign, Settings, HelpCircle, Users } from 'lucide-react';
+import { base44 } from "@/api/base44Client";
+import { Home, Library, Calendar, History, BarChart3, Trophy, User, Shield, Menu, X, DollarSign, Settings, HelpCircle, Users, LogOut } from 'lucide-react';
 
 export default function AppHeader({ scheduleCount = 0, historyCount = 0, userRole, currentView, onViewChange, completedSchedules = [], mediaMap = {} }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -59,6 +60,10 @@ export default function AppHeader({ scheduleCount = 0, historyCount = 0, userRol
                 <button
                   key={item.name}
                   onClick={() => {
+                    if (item.action === 'logout') {
+                      base44.auth.logout();
+                      return;
+                    }
                     if (item.page) {
                       navigate(createPageUrl(item.page));
                     } else {
@@ -111,6 +116,10 @@ export default function AppHeader({ scheduleCount = 0, historyCount = 0, userRol
                 <button
                   key={item.name}
                   onClick={() => {
+                    if (item.action === 'logout') {
+                      base44.auth.logout();
+                      return;
+                    }
                     if (item.page) {
                       navigate(createPageUrl(item.page));
                     } else {

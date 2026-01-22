@@ -94,13 +94,12 @@ export default function UPIConfigManager() {
       console.log('✅ saveList completed');
     },
     onSuccess: () => {
-      console.log('✅ Mutation onSuccess triggered');
       queryClient.invalidateQueries({ queryKey: ['upi-accounts-config'] });
       toast.success(editingAccount ? 'UPI account updated!' : 'UPI account added!');
       handleCloseDialog();
     },
     onError: (error) => {
-      console.error('❌ Mutation onError triggered:', error);
+      console.error('Save failed:', error);
       toast.error('Failed to save: ' + (error.message || 'Unknown error'));
     }
   });
@@ -135,10 +134,7 @@ export default function UPIConfigManager() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    console.log('📂 File selected:', file.name, 'Size:', file.size, 'bytes');
-
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      console.warn('❌ File too large');
       toast.error('File too large. Please upload an image < 5MB.');
       return;
     }
@@ -165,22 +161,12 @@ export default function UPIConfigManager() {
   };
 
   const handleSave = () => {
-    console.log('🔘 Add button clicked!');
-    console.log('📋 Current formData:', formData);
-    console.log('Validation check:');
-    console.log('  - upi_id:', formData.upi_id, '(valid:', !!formData.upi_id, ')');
-    console.log('  - qr_code_url:', formData.qr_code_url?.substring(0, 50), '(valid:', !!formData.qr_code_url, ')');
-    console.log('  - account_holder_name:', formData.account_holder_name, '(valid:', !!formData.account_holder_name, ')');
-
     if (!formData.upi_id || !formData.qr_code_url || !formData.account_holder_name) {
-      console.log('❌ Validation failed!');
       toast.error('Please provide all required fields');
       return;
     }
 
-    console.log('✅ Validation passed, calling mutation...');
     saveMutation.mutate(formData);
-    console.log('🚀 Mutation called');
   };
 
   const handleEdit = (account) => {
@@ -268,11 +254,6 @@ export default function UPIConfigManager() {
                         e.target.parentElement.innerHTML += '<span class="text-xs text-red-500">Img Error</span>';
                       }}
                     />
-                  </div>
-
-                  {/* Debug Info for Image */}
-                  <div className="text-xs text-red-500 mt-2 block font-mono bg-black p-1 rounded">
-                    Debug: {account.qr_code_url?.substring(0, 30)}... ({account.qr_code_url?.length} chars)
                   </div>
 
                   {/* Account Details */}

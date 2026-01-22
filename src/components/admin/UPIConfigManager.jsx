@@ -271,8 +271,8 @@ export default function UPIConfigManager() {
                         )}
                         {account.daily_limit > 0 && (
                           <span className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 ${(account.collected_amount || 0) >= account.daily_limit
-                              ? 'bg-red-500/20 text-red-400 border-red-500/30'
-                              : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                            ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                            : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                             }`}>
                             ₹{(account.collected_amount || 0).toLocaleString()} / ₹{parseInt(account.daily_limit).toLocaleString()}
                           </span>
@@ -328,7 +328,10 @@ export default function UPIConfigManager() {
               <Label className="text-white mb-2">UPI ID *</Label>
               <Input
                 value={formData.upi_id}
-                onChange={(e) => setFormData({ ...formData, upi_id: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData(prev => ({ ...prev, upi_id: val }));
+                }}
                 placeholder="yourname@upi"
                 className="bg-zinc-800 border-zinc-700 text-white"
               />
@@ -338,7 +341,10 @@ export default function UPIConfigManager() {
               <Label className="text-white mb-2">Account Holder Name *</Label>
               <Input
                 value={formData.account_holder_name}
-                onChange={(e) => setFormData({ ...formData, account_holder_name: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData(prev => ({ ...prev, account_holder_name: val }));
+                }}
                 placeholder="Your Name"
                 className="bg-zinc-800 border-zinc-700 text-white"
               />
@@ -348,7 +354,10 @@ export default function UPIConfigManager() {
               <Label className="text-white mb-2">Label (Optional)</Label>
               <Input
                 value={formData.label}
-                onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData(prev => ({ ...prev, label: val }));
+                }}
                 placeholder="e.g., Personal, Business"
                 className="bg-zinc-800 border-zinc-700 text-white"
               />

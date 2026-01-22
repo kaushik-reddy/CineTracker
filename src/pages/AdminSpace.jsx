@@ -20,6 +20,7 @@ import InvoiceDebugger from "../components/admin/InvoiceDebugger.jsx";
 import RequestManagement from "../components/admin/RequestManagement.jsx";
 import SubscriptionManager from "../components/admin/SubscriptionManager.jsx";
 import PaymentVerification from "../components/admin/PaymentVerification.jsx";
+import PaymentSettings from "../components/admin/PaymentSettings.jsx";
 import UPIConfigManager from "../components/admin/UPIConfigManager.jsx";
 import InvoiceManager from "../components/admin/InvoiceManager.jsx";
 import EmailTemplateManager from "../components/admin/EmailTemplateManager.jsx";

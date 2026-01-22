@@ -227,26 +227,8 @@ export default function Home() {
         }
       } catch (error) {
         console.error('Authentication error:', error);
-
-        // Local development mode - allow access without backend
-        if (error.message?.includes('Network') ||
-          error.message?.includes('Failed to fetch') ||
-          error.message?.includes('null') ||
-          !window.location.hostname.includes('base44')) {
-          console.log('[Home] Local development mode - bypassing subscription check');
-          if (isMounted) {
-            setUser({
-              name: 'Local User',
-              email: 'local@dev.local',
-              role: 'admin', // Give admin access for full local testing
-              id: 'local-user-id'
-            });
-          }
-          return;
-        }
-
-        // Not authenticated - redirect to Landing as entry point
-        window.location.replace('/Landing');
+        // Not authenticated - redirect to Login
+        window.location.replace('/Login');
       }
     };
 

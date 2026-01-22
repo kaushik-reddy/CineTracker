@@ -78,9 +78,7 @@ const Login = () => {
                         </Button>
                     </form>
 
-                    <div className="mt-6 text-xs text-center text-zinc-500">
-                        <p>Admin Login: Use your admin email configured in Supabase.</p>
-                    </div>
+
                 </CardContent>
             </Card>
         </div>

@@ -23,6 +23,7 @@
   },
   "include": [
     "src/components/**/*.js",
+    "src/components/**/*.jsx",
     "src/pages/**/*.jsx",
     "src/Layout.jsx"
   ],

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { supabase } from '@/api/supabaseClient'; // Direct supabase usage for auth UI
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
+    const [role, setRole] = useState('user'); // Default to user
     const { toast } = useToast();
 
     const handleLogin = async (e) => {
@@ -15,6 +17,9 @@ const Login = () => {
         setLoading(true);
 
         try {
+            // Save role preference
+            localStorage.setItem('cinetracker_role_preference', role);
+
             // Magic Link Login
             const { error } = await supabase.auth.signInWithOtp({
                 email,
@@ -52,6 +57,13 @@ const Login = () => {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <Tabs value={role} onValueChange={setRole} className="w-full mb-6">
+                        <TabsList className="grid w-full grid-cols-2 bg-zinc-800">
+                            <TabsTrigger value="user">Normal User</TabsTrigger>
+                            <TabsTrigger value="admin">Admin</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+
                     <form onSubmit={handleLogin} className="space-y-4">
                         <div className="space-y-2">
                             <label htmlFor="email" className="text-sm font-medium text-zinc-300">Email Address</label>

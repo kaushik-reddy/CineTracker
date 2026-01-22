@@ -125,14 +125,28 @@ export default function UPIConfigManager() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 100 * 1024) { // 100KB limit
+      toast.error('File too large. Please upload a smaller QR image (<100KB).');
+      return;
+    }
+
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setFormData({ ...formData, qr_code_url: file_url });
-      toast.success('QR code uploaded!');
+      // Convert to Base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, qr_code_url: reader.result });
+        setUploading(false);
+        toast.success('QR code processed (saved locally)!');
+      };
+      reader.onerror = () => {
+        toast.error('Failed to read file');
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
-      toast.error('Failed to upload QR code');
-    } finally {
+      console.error("Upload error:", error);
+      toast.error('Failed to process QR code');
       setUploading(false);
     }
   };

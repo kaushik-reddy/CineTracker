@@ -20,7 +20,9 @@ export default function UPIConfigManager() {
     account_holder_name: '',
     qr_code_url: '',
     label: '',
-    is_primary: false
+    is_primary: false,
+    daily_limit: '',
+    collected_amount: 0
   });
 
   // Fetch UPI accounts from AppConfig
@@ -135,7 +137,7 @@ export default function UPIConfigManager() {
       // Convert to Base64
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({ ...formData, qr_code_url: reader.result });
+        setFormData(prev => ({ ...prev, qr_code_url: reader.result }));
         setUploading(false);
         toast.success('QR code processed (saved locally)!');
       };
@@ -166,7 +168,9 @@ export default function UPIConfigManager() {
       account_holder_name: account.account_holder_name,
       qr_code_url: account.qr_code_url,
       label: account.label || '',
-      is_primary: account.is_primary
+      is_primary: account.is_primary,
+      daily_limit: account.daily_limit || '',
+      collected_amount: account.collected_amount || 0
     });
     setShowAddDialog(true);
   };
@@ -179,7 +183,9 @@ export default function UPIConfigManager() {
       account_holder_name: '',
       qr_code_url: '',
       label: '',
-      is_primary: false
+      is_primary: false,
+      daily_limit: '',
+      collected_amount: 0
     });
   };
 
@@ -263,6 +269,14 @@ export default function UPIConfigManager() {
                             {account.label}
                           </span>
                         )}
+                        {account.daily_limit > 0 && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 ${(account.collected_amount || 0) >= account.daily_limit
+                              ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                              : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                            }`}>
+                            ₹{(account.collected_amount || 0).toLocaleString()} / ₹{parseInt(account.daily_limit).toLocaleString()}
+                          </span>
+                        )}
                       </div>
                       <div className="flex gap-1">
                         <Button
@@ -338,6 +352,20 @@ export default function UPIConfigManager() {
                 placeholder="e.g., Personal, Business"
                 className="bg-zinc-800 border-zinc-700 text-white"
               />
+            </div>
+
+            <div>
+              <Label className="text-white mb-2">Daily Limit (₹) - Smart Rotation</Label>
+              <Input
+                type="number"
+                value={formData.daily_limit}
+                onChange={(e) => setFormData(prev => ({ ...prev, daily_limit: e.target.value }))}
+                placeholder="e.g. 100000 (Leave empty for no limit)"
+                className="bg-zinc-800 border-zinc-700 text-white"
+              />
+              <p className="text-xs text-zinc-500 mt-1">
+                If set, this account will be hidden from users once the limit is reached.
+              </p>
             </div>
 
             <div>

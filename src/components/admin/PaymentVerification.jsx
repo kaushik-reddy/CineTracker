@@ -33,14 +33,14 @@ export default function PaymentVerification() {
 
   // Show notification badge for new payment requests
   const processingCount = paymentRequests.filter(p => p.status === 'processing').length;
-  
+
   React.useEffect(() => {
     if (processingCount > 0) {
       document.title = `(${processingCount}) Admin - Payment Verification`;
     } else {
       document.title = 'Admin - Payment Verification';
     }
-    
+
     return () => {
       document.title = 'CineTracker Admin';
     };
@@ -56,7 +56,7 @@ export default function PaymentVerification() {
   const approveMutation = useMutation({
     mutationFn: async (paymentRequest) => {
       const user = await base44.auth.me();
-      
+
       // Update payment request
       await base44.entities.PaymentRequest.update(paymentRequest.id, {
         status: 'approved',
@@ -80,7 +80,7 @@ export default function PaymentVerification() {
       const plan = allPlans.find(p => p.id === paymentRequest.plan_id);
       const startDate = new Date();
       const endDate = new Date(startDate);
-      
+
       if (plan.billing_cycle === 'monthly') {
         endDate.setMonth(endDate.getMonth() + 1);
       } else if (plan.billing_cycle === 'yearly') {
@@ -110,6 +110,39 @@ export default function PaymentVerification() {
         console.error('Failed to generate invoice:', invoiceError);
         // Don't fail the whole approval if invoice fails
       }
+
+      // Update UPI Account Usage (Smart Rotation)
+      if (paymentRequest.admin_upi_id && paymentRequest.amount) {
+        try {
+          const configs = await base44.entities.AppConfig.filter({
+            config_key: 'upi_accounts_list'
+          });
+
+          if (configs && configs.length > 0) {
+            const config = configs[0];
+            const accounts = config.config_value || [];
+
+            const updatedAccounts = accounts.map(acc => {
+              if (acc.id === paymentRequest.admin_upi_id) {
+                return {
+                  ...acc,
+                  collected_amount: (acc.collected_amount || 0) + (paymentRequest.amount / 100) // Store in Rupees
+                };
+              }
+              return acc;
+            });
+
+            await base44.entities.AppConfig.update(config.id, {
+              ...config,
+              config_value: updatedAccounts,
+              updated_at: new Date().toISOString()
+            });
+            console.log("Updated UPI account stats");
+          }
+        } catch (e) {
+          console.error("Failed to update UPI stats", e);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-payment-requests'] });
@@ -125,7 +158,7 @@ export default function PaymentVerification() {
   const rejectMutation = useMutation({
     mutationFn: async ({ paymentRequest, reason }) => {
       const user = await base44.auth.me();
-      
+
       // Update payment request
       await base44.entities.PaymentRequest.update(paymentRequest.id, {
         status: 'rejected',
@@ -170,9 +203,9 @@ export default function PaymentVerification() {
       return;
     }
     await executeAction('Rejecting Payment', async () => {
-      await rejectMutation.mutateAsync({ 
-        paymentRequest: selectedPayment, 
-        reason: rejectionReason 
+      await rejectMutation.mutateAsync({
+        paymentRequest: selectedPayment,
+        reason: rejectionReason
       });
       setReviewDialog(false);
       setSelectedPayment(null);
@@ -189,7 +222,7 @@ export default function PaymentVerification() {
 
   const filterPayments = (payments) => {
     if (!searchQuery) return payments;
-    return payments.filter(p => 
+    return payments.filter(p =>
       p.user_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.upi_reference_id?.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -197,7 +230,7 @@ export default function PaymentVerification() {
 
   const PaymentCard = ({ payment }) => {
     const plan = allPlans.find(p => p.id === payment.plan_id);
-    
+
     return (
       <Card className="bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 transition-all">
         <CardContent className="p-3 sm:p-4">
@@ -211,7 +244,7 @@ export default function PaymentVerification() {
                   </span>
                 )}
               </div>
-              
+
               <div className="space-y-1 text-sm text-zinc-400">
                 <p>Plan: <span className="text-white">{plan?.name || 'Unknown'}</span></p>
                 <p>Amount: <span className="text-white">₹{payment.amount / 100}</span></p>
@@ -371,8 +404,8 @@ export default function PaymentVerification() {
               {selectedPayment.screenshot_url && (
                 <div>
                   <p className="text-xs sm:text-sm text-zinc-400 mb-2">Payment Screenshot</p>
-                  <img 
-                    src={selectedPayment.screenshot_url} 
+                  <img
+                    src={selectedPayment.screenshot_url}
                     alt="Payment proof"
                     className="w-full max-h-60 sm:max-h-96 object-contain bg-zinc-950 rounded border border-zinc-800"
                   />
@@ -463,7 +496,7 @@ export default function PaymentVerification() {
                       </p>
                     )}
                   </div>
-                  
+
                   {/* Delete Button for reviewed records */}
                   <div className="flex gap-3 pt-4 border-t border-zinc-800">
                     <Button

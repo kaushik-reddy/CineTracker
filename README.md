@@ -1,2 +1,0 @@
-# CineTracker
-Personal CineTracker Project

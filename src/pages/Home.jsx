@@ -245,8 +245,8 @@ export default function Home() {
           return;
         }
 
-        // Not authenticated - redirect to login then Home
-        base44.auth.redirectToLogin('/');
+        // Not authenticated - redirect to Landing as entry point
+        window.location.replace('/Landing');
       }
     };
 

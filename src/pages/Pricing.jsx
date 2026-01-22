@@ -29,7 +29,7 @@ export default function PricingPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       // Check authentication first
       let currentUser;
       try {
@@ -67,7 +67,7 @@ export default function PricingPage() {
   const { data: upiConfig } = useQuery({
     queryKey: ['upi-config'],
     queryFn: async () => {
-      const configs = await base44.entities.AppConfig.filter({ 
+      const configs = await base44.entities.AppConfig.filter({
         config_key: 'upi_payment_config',
         category: 'payment'
       });
@@ -80,6 +80,24 @@ export default function PricingPage() {
       toast.error('Please log in to subscribe');
       base44.auth.redirectToLogin();
       return;
+    }
+
+    // Check for previous trial usage if selecting trial plan
+    if (plan.billing_cycle === 'trial') {
+      try {
+        const allSubs = await base44.entities.Subscription.filter({
+          user_email: user.email
+        });
+        // Check if any subscription (active or not) was a trial
+        const hasUsedTrial = allSubs.some(s => s.plan_id.includes('trial'));
+
+        if (hasUsedTrial) {
+          toast.error("You have already used your trial period.");
+          return;
+        }
+      } catch (e) {
+        console.error("Trial check failed", e);
+      }
     }
 
     // Set selected plan and show payment dialog immediately
@@ -144,17 +162,17 @@ export default function PricingPage() {
       });
 
       toast.success('Payment submitted! Waiting for admin verification.');
-      
+
       // Reset and redirect
       setShowPaymentDialog(false);
       setSelectedPlan(null);
       setUpiReferenceId('');
       setPaymentScreenshot(null);
-      
+
       setTimeout(() => {
         window.location.replace('/Home');
       }, 2000);
-      
+
     } catch (error) {
       console.error('Failed to submit payment:', error);
       toast.error('Failed to submit payment proof: ' + error.message);
@@ -192,7 +210,7 @@ export default function PricingPage() {
             Choose Your <span className="bg-gradient-to-r from-purple-400 to-emerald-400 bg-clip-text text-transparent">CineTracker</span> Plan
           </h1>
           <p className="text-zinc-400 text-lg">Track, organize, and never miss a moment</p>
-          
+
           {currentSubscription && (
             <Badge className="mt-4 bg-emerald-500 text-white text-sm">
               Current Plan Active: {currentSubscription.status}
@@ -209,13 +227,12 @@ export default function PricingPage() {
             const isYearly = plan.billing_cycle === 'yearly';
 
             return (
-              <Card 
+              <Card
                 key={plan.id}
-                className={`relative overflow-hidden border-2 transition-all duration-300 ${
-                  isYearly 
-                    ? 'bg-gradient-to-br from-purple-900/40 to-emerald-900/40 border-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.3)] scale-105' 
+                className={`relative overflow-hidden border-2 transition-all duration-300 ${isYearly
+                    ? 'bg-gradient-to-br from-purple-900/40 to-emerald-900/40 border-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.3)] scale-105'
                     : 'bg-zinc-900/80 border-zinc-800 hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.2)]'
-                }`}
+                  }`}
               >
                 {isYearly && (
                   <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
@@ -225,16 +242,15 @@ export default function PricingPage() {
 
                 <CardHeader className="text-center pb-4">
                   <div className="flex justify-center mb-4">
-                    <div className={`p-3 rounded-full ${
-                      isYearly ? 'bg-gradient-to-br from-purple-500 to-emerald-500' : 'bg-zinc-800'
-                    }`}>
+                    <div className={`p-3 rounded-full ${isYearly ? 'bg-gradient-to-br from-purple-500 to-emerald-500' : 'bg-zinc-800'
+                      }`}>
                       <Icon className="w-8 h-8 text-white" />
                     </div>
                   </div>
-                  
+
                   <CardTitle className="text-2xl text-white mb-2">{plan.name}</CardTitle>
                   <p className="text-zinc-400 text-sm">{plan.description}</p>
-                  
+
                   <div className="mt-4">
                     <div className="text-4xl font-bold text-white">
                       {formatPrice(plan.price, plan.billing_cycle)}
@@ -300,14 +316,13 @@ export default function PricingPage() {
                   <Button
                     onClick={() => handleSelectPlan(plan)}
                     disabled={isCurrentPlan || processingPlanId === plan.id}
-                    className={`w-full mt-6 ${
-                      isYearly
+                    className={`w-full mt-6 ${isYearly
                         ? 'bg-gradient-to-r from-purple-500 to-emerald-500 hover:from-purple-600 hover:to-emerald-600 text-white'
                         : isCurrentPlan
                           ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
                           : 'bg-white hover:bg-zinc-100 text-black'
-                    }`}
-                    >
+                      }`}
+                  >
                     {processingPlanId === plan.id ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -318,7 +333,7 @@ export default function PricingPage() {
                     ) : (
                       'Subscribe Now'
                     )}
-                    </Button>
+                  </Button>
 
                   {isYearly && (
                     <p className="text-center text-xs text-emerald-400 mt-2">
@@ -351,12 +366,12 @@ export default function PricingPage() {
                 <p className="text-zinc-400 text-sm mb-4">
                   Scan QR code or use UPI ID to pay ₹{selectedPlan ? (selectedPlan.price / 100) : 0}
                 </p>
-                
+
                 {/* UPI QR Code */}
                 {upiConfig.qr_code_url && (
                   <div className="flex justify-center mb-4">
-                    <img 
-                      src={upiConfig.qr_code_url} 
+                    <img
+                      src={upiConfig.qr_code_url}
                       alt="UPI QR Code"
                       className="w-48 h-48 object-contain border border-zinc-700 rounded"
                     />

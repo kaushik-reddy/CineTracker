@@ -1,5 +1,6 @@
 import AdminSpace from './pages/AdminSpace';
 import Home from './pages/Home';
+import Login from './pages/Login';
 import Landing from './pages/Landing';
 import Pricing from './pages/Pricing';
 import Settings from './pages/Settings';
@@ -18,6 +19,7 @@ export const PAGES = {
     "Spending": Spending,
     "Support": Support,
     "WatchParties": WatchParties,
+    "Login": Login,
 }
 
 export const pagesConfig = {

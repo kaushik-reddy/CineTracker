@@ -15,7 +15,7 @@ Your code is already initialized as a Git repository. Follow these steps to push
 2.  **Link and Push**
     *   Run these commands in your terminal (replace `YOUR_USERNAME` with your actual GitHub username):
     ```bash
-    git remote add origin https://github.com/kaushik-reddy/cinetracker.git
+    git remote add origin https://github.com/kaushik-reddy/CineTracker.git
     git branch -M main
     git push -u origin main
     ```
@@ -78,3 +78,21 @@ You will need to replace the calls in `base44Client.js` to use `supabase` instea
 
 > [!TIP]
 > The current "Offline Mode" is great for development and personal use. Only upgrade to Supabase when you are ready to manage a real database!
+
+---
+
+## Phase 4: Connect Custom Domain (CineTracker.in)
+
+Since you own `CineTracker.in`, here is how to verify it on Vercel:
+
+1.  **Go to Vercel Dashboard**
+    *   Open your project -> **Settings** -> **Domains**.
+2.  **Add Domain**
+    *   Enter `cinetracker.in` and click **Add**.
+3.  **Configure DNS (at your Registrar)**
+    *   Vercel will show you a **A Record** (IP Address) and **CNAME**.
+    *   Login to where you bought the domain (GoDaddy, Namecheap, etc.).
+    *   Add/Update the **A Record** (`@`) to point to Vercel's IP: `76.76.21.21` (Example, check Vercel for exact IP).
+    *   Add/Update the **CNAME Record** (`www`) to point to `cname.vercel-dns.com`.
+4.  **Wait for Propagation**
+    *   It may take 1-24 hours for the domain to work globally. Vercel will show a "Success" green checkmark when ready.

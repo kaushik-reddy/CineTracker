@@ -1,32 +1,23 @@
-import { createClient } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
 import { localBase44 } from './localStorageMock';
+import { supabaseAdapter } from './supabaseAdapter';
 
-const { appId, serverUrl, token, functionsVersion } = appParams;
+const VITE_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
+const VITE_SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const hasSupabase = VITE_SUPABASE_URL && VITE_SUPABASE_ANON_KEY;
 
-// Check if we're in local development mode (no backend available)
-const isLocalDev = !serverUrl ||
-  serverUrl === 'null' ||
-  serverUrl === 'undefined' ||
-  serverUrl?.includes('null') ||
-  window.location.hostname === 'localhost';
+// Check if we should use local mock (force offline or missing keys)
+// If supabase keys are present, we default to using them (Shared Data Mode)
+const forceOffline = import.meta.env.VITE_FORCE_OFFLINE === 'true';
 
 let base44Instance;
 
-if (isLocalDev) {
-  // Use local storage mock for offline development
-  console.log('[Base44Client] Using localStorage mock for local development');
-  base44Instance = localBase44;
+if (hasSupabase && !forceOffline) {
+  console.log('[Base44Client] Using Supabase Adapter (Cloud DB)');
+  base44Instance = supabaseAdapter;
 } else {
-  // Use real Base44 SDK client
-  console.log('[Base44Client] Using real Base44 backend at:', serverUrl);
-  base44Instance = createClient({
-    appId,
-    serverUrl,
-    token,
-    functionsVersion,
-    requiresAuth: false
-  });
+  console.log('[Base44Client] Using localStorage mock (Offline)');
+  base44Instance = localBase44;
 }
 
 export const base44 = base44Instance;

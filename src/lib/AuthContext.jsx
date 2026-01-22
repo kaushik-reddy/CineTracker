@@ -22,16 +22,15 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingPublicSettings(true);
       setAuthError(null);
 
-      // Check if we're in local development mode without backend
-      const isLocalDev = !appParams.serverUrl || appParams.serverUrl === 'null' || appParams.serverUrl.includes('null');
+      // Check if we're in local development mode OR Supabase mode (no Base44 backend)
+      const isBase44Backend = appParams.serverUrl && appParams.serverUrl !== 'null' && !appParams.serverUrl.includes('null');
 
-      if (isLocalDev) {
-        // Local development mode - skip authentication
-        console.log('[Auth] Local development mode - skipping authentication');
+      if (!isBase44Backend) {
+        // We are utilizing Supabase Adapter or Local Mock
+        console.log('[Auth] No Base44 Backend - skipping public settings check');
         setIsLoadingPublicSettings(false);
-        setIsLoadingAuth(false);
-        setIsAuthenticated(true); // Allow access in local dev
-        setUser({ name: 'Local User', email: 'local@dev.local' }); // Mock user
+        // Directly check user auth which will use the configured adapter
+        await checkUserAuth();
         return;
       }
 

@@ -30,8 +30,10 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
-  if (authError) {
+  // Handle authentication errors (skip if we are already on the login page)
+  const isLoginPage = window.location.pathname === '/Login';
+
+  if (authError && !isLoginPage) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {

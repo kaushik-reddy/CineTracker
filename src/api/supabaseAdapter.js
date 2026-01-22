@@ -184,7 +184,7 @@ const auth = {
     logout: async () => {
         localStorage.removeItem('cinetracker_role_preference');
         await supabase.auth.signOut();
-        window.location.reload();
+        window.location.href = '/Login';
     },
     redirectToLogin: () => {
         window.location.href = '/Login';

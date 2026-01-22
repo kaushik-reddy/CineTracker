@@ -70,14 +70,28 @@ export default function PricingPage() {
     queryFn: async () => {
       try {
         const configs = await base44.entities.AppConfig.filter({
-          config_key: 'upi_accounts_list' // Updated key
+          config_key: 'upi_accounts_list'
         });
 
         const accounts = configs[0]?.config_value || [];
-        // Find primary or take first
-        const primary = accounts.find(a => a.is_primary) || accounts[0];
 
-        return primary || { upi_id: '', qr_code_url: '' };
+        // Smart Rotation Logic
+        // Filter accounts that have not reached their daily limit (if set)
+        const validAccounts = accounts.filter(acc => {
+          if (!acc.daily_limit) return true; // No limit
+          const limit = parseFloat(acc.daily_limit);
+          const collected = parseFloat(acc.collected_amount || 0);
+          return collected < limit;
+        });
+
+        // If all reached limit, fallback to all accounts (or empty?) - For now fallback to all to avoid blockage
+        const availableAccounts = validAccounts.length > 0 ? validAccounts : accounts;
+
+        if (availableAccounts.length === 0) return { upi_id: '', qr_code_url: '' };
+
+        // Randomly select one to distribute load
+        const selected = availableAccounts[Math.floor(Math.random() * availableAccounts.length)];
+        return selected;
       } catch (e) {
         console.error("Failed to fetch UPI config", e);
         return { upi_id: '', qr_code_url: '' };
@@ -161,7 +175,8 @@ export default function PricingPage() {
         upi_reference_id: upiReferenceId || 'N/A',
         screenshot_url: paymentScreenshot || '',
         status: 'processing',
-        submitted_at: new Date().toISOString()
+        submitted_at: new Date().toISOString(),
+        admin_upi_id: upiConfig?.id || null // Store which admin account was used
       });
 
       console.log('Payment request created:', paymentRequest);

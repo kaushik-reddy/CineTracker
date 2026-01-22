@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 const Login = () => {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
-    const [role, setRole] = useState('user'); // Default to user
+    const [loading, setLoading] = useState(false);
     const { toast } = useToast();
 
     const handleLogin = async (e) => {
@@ -17,9 +17,6 @@ const Login = () => {
         setLoading(true);
 
         try {
-            // Save role preference
-            localStorage.setItem('cinetracker_role_preference', role);
-
             // Magic Link Login
             const { error } = await supabase.auth.signInWithOtp({
                 email,
@@ -57,12 +54,7 @@ const Login = () => {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Tabs value={role} onValueChange={setRole} className="w-full mb-6">
-                        <TabsList className="grid w-full grid-cols-2 bg-zinc-800">
-                            <TabsTrigger value="user">Normal User</TabsTrigger>
-                            <TabsTrigger value="admin">Admin</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
+                    {/* Role tabs removed for single login flow */}
 
                     <form onSubmit={handleLogin} className="space-y-4">
                         <div className="space-y-2">
@@ -100,7 +92,6 @@ const Login = () => {
                             className="w-full border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white"
                             onClick={async () => {
                                 setLoading(true);
-                                localStorage.setItem('cinetracker_role_preference', role);
                                 await supabase.auth.signInWithOAuth({
                                     provider: 'google',
                                     options: {

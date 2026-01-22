@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 const Login = () => {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
-    const [loading, setLoading] = useState(false);
+
     const { toast } = useToast();
 
     const handleLogin = async (e) => {

@@ -178,10 +178,11 @@ const auth = {
             id: user.id,
             email: user.email,
             name: user.user_metadata?.full_name || user.email?.split('@')[0],
-            role: user.email?.toLowerCase() === 'kaushik4432@gmail.com' ? 'admin' : 'user'
+            role: localStorage.getItem('cinetracker_role_preference') || (user.email?.toLowerCase() === 'kaushik4432@gmail.com' ? 'admin' : 'user')
         };
     },
     logout: async () => {
+        localStorage.removeItem('cinetracker_role_preference');
         await supabase.auth.signOut();
         window.location.reload();
     },

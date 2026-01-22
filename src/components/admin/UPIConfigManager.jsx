@@ -135,8 +135,11 @@ export default function UPIConfigManager() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 100 * 1024) { // 100KB limit
-      toast.error('File too large. Please upload a smaller QR image (<100KB).');
+    console.log('📂 File selected:', file.name, 'Size:', file.size, 'bytes');
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      console.warn('❌ File too large');
+      toast.error('File too large. Please upload an image < 5MB.');
       return;
     }
 

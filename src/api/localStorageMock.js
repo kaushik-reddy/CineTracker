@@ -291,14 +291,6 @@ const auth = {
 // Mock integrations
 const integrations = {
     Core: {
-        InvokeLLM: async ({ prompt }) => {
-            console.log('[LocalMock] LLM invoked with prompt:', prompt.substring(0, 100) + '...');
-            return 'This is a mock LLM response for local development.';
-        },
-        GenerateImage: async ({ prompt }) => {
-            console.log('[LocalMock] Image generation called with prompt:', prompt.substring(0, 100) + '...');
-            return { url: 'https://via.placeholder.com/400x400?text=Mock+Image' };
-        },
         SendEmail: async (params) => {
             console.log('[LocalMock] Email sending simulated:', params);
             return { success: true };
@@ -306,14 +298,6 @@ const integrations = {
         UploadFile: async ({ file }) => {
             console.log('[LocalMock] File upload simulated:', file.name);
             return { file_url: 'https://via.placeholder.com/150?text=Uploaded+File' };
-        },
-        SendSMS: async (params) => {
-            console.log('[LocalMock] SMS sending simulated:', params);
-            return { success: true };
-        },
-        ExtractDataFromUploadedFile: async ({ file_url }) => {
-            console.log('[LocalMock] Data extraction simulated for:', file_url);
-            return { data: { mock_field: 'mock_value' } };
         }
     }
 };

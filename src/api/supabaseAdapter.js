@@ -231,8 +231,6 @@ const auth = {
 // We will keep mocks for heavy logic, or implement basic File Upload via Storage
 const integrations = {
     Core: {
-        InvokeLLM: async () => "Supabase backend doesn't support LLM yet.",
-        GenerateImage: async () => ({ url: "https://via.placeholder.com/400?text=No+Gen+AI" }),
         SendEmail: async () => ({ success: true }),
         UploadFile: async ({ file }) => {
             // Real Supabase Storage Upload
@@ -249,9 +247,7 @@ const integrations = {
 
             const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(fileName);
             return { file_url: publicUrl };
-        },
-        SendSMS: async () => ({ success: true }),
-        ExtractDataFromUploadedFile: async () => ({ data: {} })
+        }
     }
 };
 

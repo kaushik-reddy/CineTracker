@@ -72,7 +72,7 @@ export default function LogoUploader({ onUploadComplete }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [availableEntities, setAvailableEntities] = useState([]);
-  
+
   // Cropping state
   const [showCropper, setShowCropper] = useState(false);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -133,7 +133,7 @@ export default function LogoUploader({ onUploadComplete }) {
         const audio = Array.from(audioSet).sort().map(a => ({ type: 'format', value: a, label: a }));
         const video = Array.from(videoSet).sort().map(v => ({ type: 'format', value: v, label: v }));
         const universesList = universes.filter(u => u.is_active).map(u => ({ type: 'studio', value: u.name, label: u.name }));
-        
+
         setAvailableEntities([...platforms, ...devices, ...audio, ...video, ...universesList]);
       } catch (error) {
         console.error('Failed to load entities:', error);
@@ -159,7 +159,7 @@ export default function LogoUploader({ onUploadComplete }) {
       const dataUrl = e.target.result;
       setOriginalImageSrc(dataUrl);
       setPreviewUrl(dataUrl);
-      
+
       // Only show cropper for non-SVG images
       if (!isSvgFile) {
         setShowCropper(true);
@@ -174,13 +174,13 @@ export default function LogoUploader({ onUploadComplete }) {
     try {
       const croppedBlob = await getCroppedImg(originalImageSrc, croppedAreaPixels, rotation);
       const croppedFile = new File([croppedBlob], selectedFile.name, { type: 'image/png' });
-      
+
       // Create preview URL for cropped image
       const croppedUrl = URL.createObjectURL(croppedBlob);
       setPreviewUrl(croppedUrl);
       setSelectedFile(croppedFile);
       setShowCropper(false);
-      
+
       toast.success('Image cropped successfully');
     } catch (error) {
       console.error('Crop failed:', error);
@@ -191,7 +191,7 @@ export default function LogoUploader({ onUploadComplete }) {
   const autoCropToContent = (imageData, width, height) => {
     const data = imageData.data;
     let minX = width, maxX = 0, minY = height, maxY = 0;
-    
+
     // Find content bounds
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
@@ -205,38 +205,38 @@ export default function LogoUploader({ onUploadComplete }) {
         }
       }
     }
-    
+
     // Add small padding
     const padding = 5;
     minX = Math.max(0, minX - padding);
     minY = Math.max(0, minY - padding);
     maxX = Math.min(width - 1, maxX + padding);
     maxY = Math.min(height - 1, maxY + padding);
-    
+
     return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
   };
 
   const removeBackground = async () => {
     if (!previewUrl) return;
-    
+
     setIsProcessing(true);
     try {
       const img = await createImage(previewUrl);
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      
+
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
-      
+
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
-      
+
       // Detect background from corners
       const cornerPixels = [
         [0, 0], [img.width - 1, 0], [0, img.height - 1], [img.width - 1, img.height - 1]
       ];
-      
+
       let avgR = 0, avgG = 0, avgB = 0;
       cornerPixels.forEach(([x, y]) => {
         const idx = (y * img.width + x) * 4;
@@ -245,31 +245,31 @@ export default function LogoUploader({ onUploadComplete }) {
         avgB += data[idx + 2];
       });
       avgR /= 4; avgG /= 4; avgB /= 4;
-      
+
       const bgBrightness = (avgR + avgG + avgB) / 3;
       const isBlackBg = bgBrightness < 50;
-      
+
       // Remove background
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
         const brightness = (r + g + b) / 3;
-        
+
         if (isBlackBg) {
           if (brightness < 30) data[i + 3] = 0;
         } else {
           if (brightness > 200) data[i + 3] = 0;
         }
       }
-      
+
       ctx.putImageData(imageData, 0, 0);
-      
+
       // Auto-crop to content bounds
       const cropBounds = autoCropToContent(imageData, canvas.width, canvas.height);
       const croppedCanvas = document.createElement('canvas');
       const croppedCtx = croppedCanvas.getContext('2d');
-      
+
       croppedCanvas.width = cropBounds.width;
       croppedCanvas.height = cropBounds.height;
       croppedCtx.drawImage(
@@ -277,18 +277,18 @@ export default function LogoUploader({ onUploadComplete }) {
         cropBounds.x, cropBounds.y, cropBounds.width, cropBounds.height,
         0, 0, cropBounds.width, cropBounds.height
       );
-      
+
       const processedBlob = await new Promise(resolve => {
         croppedCanvas.toBlob(resolve, 'image/png');
       });
-      
+
       const processedFile = new File([processedBlob], selectedFile.name.replace(/\.\w+$/, '.png'), { type: 'image/png' });
       const processedUrl = URL.createObjectURL(processedBlob);
-      
+
       setPreviewUrl(processedUrl);
       setProcessedPreviewUrl(processedUrl);
       setSelectedFile(processedFile);
-      
+
       toast.success(`${isBlackBg ? 'Black' : 'White'} BG removed & auto-cropped to content`);
     } catch (error) {
       console.error('Background removal failed:', error);
@@ -311,10 +311,18 @@ export default function LogoUploader({ onUploadComplete }) {
         name: logoData.entityType,
         category: logoData.category
       });
-      
-      // Upload file
-      const uploadResult = await base44.integrations.Core.UploadFile({ file: selectedFile });
-      const originalUrl = uploadResult.file_url;
+
+      // Convert file to Base64
+      const fileToBase64 = (file) =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (error) => reject(error);
+        });
+
+      const base64Url = await fileToBase64(selectedFile);
+      const originalUrl = base64Url;
 
       if (existingLogos.length > 0) {
         // Backup existing logo before overwriting
@@ -339,12 +347,12 @@ export default function LogoUploader({ onUploadComplete }) {
         });
         toast.success('Logo uploaded - will appear automatically across the app');
       }
-      
+
       onUploadComplete?.();
 
       // Broadcast logo update event
-      window.dispatchEvent(new CustomEvent('logo-updated', { 
-        detail: { category: logoData.category, name: logoData.entityType } 
+      window.dispatchEvent(new CustomEvent('logo-updated', {
+        detail: { category: logoData.category, name: logoData.entityType }
       }));
 
       // Reset form
@@ -383,50 +391,50 @@ export default function LogoUploader({ onUploadComplete }) {
         </div>
 
         <div className="space-y-4">
-        <div>
-          <Label className="text-zinc-300">Select Entity Type</Label>
-          <Select value={logoData.category} onValueChange={(value) => setLogoData({ ...logoData, category: value, entityType: '' })}>
-            <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
-              <SelectValue placeholder="Choose category" />
-            </SelectTrigger>
-            <SelectContent className="bg-zinc-800 border-zinc-700">
-              <SelectItem value="platform" className="text-white">Platform</SelectItem>
-              <SelectItem value="studio" className="text-white">Universe / Studio</SelectItem>
-              <SelectItem value="device" className="text-white">Device</SelectItem>
-              <SelectItem value="format" className="text-white">Audio/Video Format</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {logoData.category && (
           <div>
-            <Label className="text-zinc-300">Select Specific Entity</Label>
-            <Select 
-              value={logoData.entityType} 
-              onValueChange={(value) => {
-                const entity = availableEntities.find(e => e.value === value);
-                setLogoData({ ...logoData, entityType: value, name: entity?.label || value });
-              }}
-            >
+            <Label className="text-zinc-300">Select Entity Type</Label>
+            <Select value={logoData.category} onValueChange={(value) => setLogoData({ ...logoData, category: value, entityType: '' })}>
               <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
-                <SelectValue placeholder="Choose entity" />
+                <SelectValue placeholder="Choose category" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 border-zinc-700 max-h-60 overflow-y-auto">
-                {availableEntities.length === 0 ? (
-                  <div className="text-zinc-400 text-xs p-2">Loading options...</div>
-                ) : (
-                  availableEntities
-                    .filter(e => 
-                      (logoData.category === 'platform' && e.type === 'platform') ||
-                      (logoData.category === 'studio' && e.type === 'studio') ||
-                      (logoData.category === 'device' && e.type === 'device') ||
-                      (logoData.category === 'format' && e.type === 'format')
-                    )
-                    .length === 0 ? (
+              <SelectContent className="bg-zinc-800 border-zinc-700">
+                <SelectItem value="platform" className="text-white">Platform</SelectItem>
+                <SelectItem value="studio" className="text-white">Universe / Studio</SelectItem>
+                <SelectItem value="device" className="text-white">Device</SelectItem>
+                <SelectItem value="format" className="text-white">Audio/Video Format</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {logoData.category && (
+            <div>
+              <Label className="text-zinc-300">Select Specific Entity</Label>
+              <Select
+                value={logoData.entityType}
+                onValueChange={(value) => {
+                  const entity = availableEntities.find(e => e.value === value);
+                  setLogoData({ ...logoData, entityType: value, name: entity?.label || value });
+                }}
+              >
+                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                  <SelectValue placeholder="Choose entity" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-800 border-zinc-700 max-h-60 overflow-y-auto">
+                  {availableEntities.length === 0 ? (
+                    <div className="text-zinc-400 text-xs p-2">Loading options...</div>
+                  ) : (
+                    availableEntities
+                      .filter(e =>
+                        (logoData.category === 'platform' && e.type === 'platform') ||
+                        (logoData.category === 'studio' && e.type === 'studio') ||
+                        (logoData.category === 'device' && e.type === 'device') ||
+                        (logoData.category === 'format' && e.type === 'format')
+                      )
+                      .length === 0 ? (
                       <div className="text-zinc-400 text-xs p-2">No {logoData.category} options found</div>
                     ) : (
                       availableEntities
-                        .filter(e => 
+                        .filter(e =>
                           (logoData.category === 'platform' && e.type === 'platform') ||
                           (logoData.category === 'studio' && e.type === 'studio') ||
                           (logoData.category === 'device' && e.type === 'device') ||
@@ -438,105 +446,105 @@ export default function LogoUploader({ onUploadComplete }) {
                           </SelectItem>
                         ))
                     )
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        <div>
-          <Label className="text-zinc-300">Additional Tags (optional)</Label>
-          <Input
-            value={logoData.tags}
-            onChange={(e) => setLogoData({ ...logoData, tags: e.target.value })}
-            placeholder="streaming, ott, video"
-            className="bg-zinc-800 border-zinc-700 text-white"
-          />
-        </div>
-
-        <div>
-          <Label className="text-zinc-300">Upload Logo File</Label>
-          <Input
-            type="file"
-            accept="image/png,image/jpeg,image/jpg,image/svg+xml"
-            onChange={handleFileSelect}
-            className="bg-zinc-800 border-zinc-700 text-white"
-          />
-          <p className="text-xs text-zinc-500 mt-1">PNG, JPG (with cropping) or SVG</p>
-        </div>
-
-        {previewUrl && !showCropper && (
-          <div className="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-zinc-400">Logo Preview</p>
-              <div className="flex gap-2">
-                {!isSvg && (
-                  <>
-                    <Button
-                      onClick={removeBackground}
-                      disabled={isProcessing}
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500"
-                    >
-                      {isProcessing ? 'Processing...' : 'Remove BG'}
-                    </Button>
-                    <Button
-                      onClick={() => setShowCropper(true)}
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-xs bg-zinc-700 hover:bg-zinc-600 text-white border-zinc-600"
-                    >
-                      <Crop className="w-3 h-3 mr-1" />
-                      Crop
-                    </Button>
-                  </>
-                )}
-              </div>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
-            
-            {/* Show both versions side by side */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Original Preview */}
-              <div>
-                <p className="text-[10px] text-zinc-500 mb-1">Original</p>
-                <div className="bg-zinc-900 p-3 rounded border border-zinc-700">
-                  <img 
-                    src={previewUrl} 
-                    alt="Original" 
-                    className="max-h-20 w-full object-contain"
-                  />
+          )}
+
+          <div>
+            <Label className="text-zinc-300">Additional Tags (optional)</Label>
+            <Input
+              value={logoData.tags}
+              onChange={(e) => setLogoData({ ...logoData, tags: e.target.value })}
+              placeholder="streaming, ott, video"
+              className="bg-zinc-800 border-zinc-700 text-white"
+            />
+          </div>
+
+          <div>
+            <Label className="text-zinc-300">Upload Logo File</Label>
+            <Input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+              onChange={handleFileSelect}
+              className="bg-zinc-800 border-zinc-700 text-white"
+            />
+            <p className="text-xs text-zinc-500 mt-1">PNG, JPG (with cropping) or SVG</p>
+          </div>
+
+          {previewUrl && !showCropper && (
+            <div className="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-zinc-400">Logo Preview</p>
+                <div className="flex gap-2">
+                  {!isSvg && (
+                    <>
+                      <Button
+                        onClick={removeBackground}
+                        disabled={isProcessing}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500"
+                      >
+                        {isProcessing ? 'Processing...' : 'Remove BG'}
+                      </Button>
+                      <Button
+                        onClick={() => setShowCropper(true)}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs bg-zinc-700 hover:bg-zinc-600 text-white border-zinc-600"
+                      >
+                        <Crop className="w-3 h-3 mr-1" />
+                        Crop
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
-              
-              {/* On Black Background Preview */}
-              <div>
-                <p className="text-[10px] text-zinc-500 mb-1">On Black (App Display)</p>
-                <div className="bg-black p-3 rounded border border-zinc-700">
-                  <img 
-                    src={previewUrl} 
-                    alt="On Black" 
-                    className="max-h-20 w-full object-contain"
-                  />
+
+              {/* Show both versions side by side */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Original Preview */}
+                <div>
+                  <p className="text-[10px] text-zinc-500 mb-1">Original</p>
+                  <div className="bg-zinc-900 p-3 rounded border border-zinc-700">
+                    <img
+                      src={previewUrl}
+                      alt="Original"
+                      className="max-h-20 w-full object-contain"
+                    />
+                  </div>
+                </div>
+
+                {/* On Black Background Preview */}
+                <div>
+                  <p className="text-[10px] text-zinc-500 mb-1">On Black (App Display)</p>
+                  <div className="bg-black p-3 rounded border border-zinc-700">
+                    <img
+                      src={previewUrl}
+                      alt="On Black"
+                      className="max-h-20 w-full object-contain"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {processedPreviewUrl && (
-              <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1">
-                ✓ Background removed - transparent PNG ready
-              </p>
-            )}
-          </div>
-        )}
 
-        <Button
-          onClick={handleUpload}
-          disabled={uploading || !selectedFile || !logoData.entityType}
-          className="w-full bg-gradient-to-r from-purple-500 to-emerald-500 hover:shadow-xl disabled:opacity-50"
-        >
-          {uploading ? 'Uploading...' : 'Upload Logo'}
-        </Button>
+              {processedPreviewUrl && (
+                <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+                  ✓ Background removed - transparent PNG ready
+                </p>
+              )}
+            </div>
+          )}
+
+          <Button
+            onClick={handleUpload}
+            disabled={uploading || !selectedFile || !logoData.entityType}
+            className="w-full bg-gradient-to-r from-purple-500 to-emerald-500 hover:shadow-xl disabled:opacity-50"
+          >
+            {uploading ? 'Uploading...' : 'Upload Logo'}
+          </Button>
         </div>
       </div>
 

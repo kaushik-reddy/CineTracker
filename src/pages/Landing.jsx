@@ -2,61 +2,91 @@ import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { base44 } from "@/api/base44Client";
+import { supabase } from '@/api/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from "@/utils";
+import { useToast } from '@/components/ui/use-toast';
 import { Sparkles, Crown, ArrowRight, Film, Calendar, BarChart3, Trophy, CheckCircle2, Star } from "lucide-react";
 
 
 export default function LandingPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  //const [showPricing, setShowPricing] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
+  const [email, setEmail] = useState('');
+  const [sendingLink, setSendingLink] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     checkAuthAndSubscription();
   }, []);
 
   const checkAuthAndSubscription = async () => {
-      try {
-        const currentUser = await base44.auth.me();
-        setUser(currentUser);
+    try {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
 
-        // Admin always goes to home
-        if (currentUser.role === 'admin') {
-          window.location.href = '/Home';
-          return;
-        }
-
-        // Check if user has active subscription
-        const subscriptions = await base44.entities.Subscription.filter({
-          user_email: currentUser.email,
-          status: ['trial', 'active']
-        });
-
-        if (subscriptions && subscriptions.length > 0) {
-          // User has active subscription, redirect to Home
-          window.location.href = '/Home';
-          return;
-        }
-
-        // Authenticated user without subscription - show pricing
-        setShowPricing(true);
-      } catch (error) {
-        // Not logged in - show landing page with CTA
-        setShowPricing(false);
-      } finally {
-        setLoading(false);
+      // Admin always goes to home
+      if (currentUser.role === 'admin') {
+        window.location.href = '/Home';
+        return;
       }
-    };
 
+      // Check if user has active subscription
+      const subscriptions = await base44.entities.Subscription.filter({
+        user_email: currentUser.email,
+        status: ['trial', 'active']
+      });
 
+      if (subscriptions && subscriptions.length > 0) {
+        // User has active subscription, redirect to Home
+        window.location.href = '/Home';
+        return;
+      }
 
-    const handleLogin = () => {
-      // Redirect to Base44 authentication (Google) and return to Landing
-      base44.auth.redirectToLogin(window.location.origin + '/Landing');
-    };
+      // Authenticated user without subscription - show pricing
+      setShowPricing(true);
+    } catch (error) {
+      // Not logged in - show landing page with CTA
+      setShowPricing(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMagicLinkLogin = async (e) => {
+    e.preventDefault();
+    setSendingLink(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: window.location.origin + '/Landing',
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Magic Link Sent!",
+        description: "Check your email for the login link.",
+      });
+      setEmail('');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to sign in",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingLink(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -71,26 +101,22 @@ export default function LandingPage() {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-emerald-500/10 blur-3xl" />
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
           {/* Header */}
           <div className="flex items-center justify-between mb-12">
             <div className="flex items-center gap-3">
-              <img 
+              <img
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/693d661aca82e178be7bb96f/ab2cb46cf_IMG_0700.png"
-                alt="CineTracker" 
+                alt="CineTracker"
                 className="w-12 h-12 rounded-full border-2 border-emerald-500/50"
               />
               <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-purple-400 bg-clip-text text-transparent">
                 CineTracker
               </h2>
             </div>
-            
-            {!user && (
-              <Button onClick={handleLogin} variant="outline" className="text-white border-zinc-700 hover:bg-zinc-800">
-                Login
-              </Button>
-            )}
+
+
           </div>
 
           {/* Hero Content */}
@@ -99,45 +125,73 @@ export default function LandingPage() {
               <Sparkles className="w-3 h-3 mr-1" />
               Your Personal Media Companion
             </Badge>
-            
+
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
               Track Every Movie, Series & Book
               <span className="block mt-2 bg-gradient-to-r from-purple-400 via-emerald-400 to-amber-400 bg-clip-text text-transparent">
                 Never Miss a Moment
               </span>
             </h1>
-            
+
             <p className="text-lg sm:text-xl text-zinc-400 mb-8 max-w-2xl mx-auto">
-              Organize your watchlist, schedule viewing sessions, track progress, and celebrate achievements. 
+              Organize your watchlist, schedule viewing sessions, track progress, and celebrate achievements.
               The ultimate platform for serious entertainment enthusiasts.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                onClick={() => navigate(createPageUrl('Pricing'))}
-                size="lg"
-                className="bg-gradient-to-r from-purple-500 to-emerald-500 hover:from-purple-600 hover:to-emerald-600 text-white text-lg px-8 py-6"
-              >
-                <Crown className="w-5 h-5 mr-2" />
-                View Plans
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              
-              {!user && (
-                <Button 
-                  onClick={handleLogin}
-                  size="lg"
-                  variant="outline"
-                  className="text-white border-zinc-700 hover:bg-zinc-800 text-lg px-8 py-6"
-                >
-                  Login
-                </Button>
-              )}
-            </div>
-
-            <p className="text-sm text-zinc-500 mt-4">
-              7-day free trial • No credit card required
-            </p>
+            {/* Login Form for unauthenticated users */}
+            {!user ? (
+              <div className="max-w-md mx-auto space-y-4">
+                <form onSubmit={handleMagicLinkLogin} className="flex gap-2">
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:ring-purple-500 flex-1"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={sendingLink}
+                    className="bg-gradient-to-r from-purple-500 to-emerald-500 hover:from-purple-600 hover:to-emerald-600 text-white px-6"
+                  >
+                    {sendingLink ? 'Sending...' : 'Get Started'}
+                  </Button>
+                </form>
+                <p className="text-xs text-zinc-500 text-center">
+                  We'll send you a magic link to login • No password needed
+                </p>
+                <div className="text-center">
+                  <Button
+                    onClick={() => navigate(createPageUrl('Pricing'))}
+                    variant="ghost"
+                    className="text-zinc-400 hover:text-white text-sm"
+                  >
+                    View Plans →
+                  </Button>
+                </div>
+                <p className="text-sm text-zinc-500 mt-2 text-center">
+                  7-day free trial • No credit card required
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button
+                    onClick={() => navigate(createPageUrl('Pricing'))}
+                    size="lg"
+                    className="bg-gradient-to-r from-purple-500 to-emerald-500 hover:from-purple-600 hover:to-emerald-600 text-white text-lg px-8 py-6"
+                  >
+                    <Crown className="w-5 h-5 mr-2" />
+                    Select Your Plan
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </div>
+                <p className="text-sm text-zinc-500 text-center">
+                  Choose a plan to start tracking your entertainment
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Feature Grid */}
@@ -196,7 +250,7 @@ export default function LandingPage() {
             <p className="text-zinc-300 mb-6 max-w-2xl mx-auto">
               Join thousands of users organizing their entertainment life. View our plans and start your journey today.
             </p>
-            <Button 
+            <Button
               onClick={() => navigate(createPageUrl('Pricing'))}
               size="lg"
               className="bg-gradient-to-r from-purple-500 to-emerald-500 hover:from-purple-600 hover:to-emerald-600 text-white text-lg px-12 py-6"

@@ -14,7 +14,7 @@
       "dom"
     ],
     "target": "esnext",
-    "checkJs": false,
+    "noEmit": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

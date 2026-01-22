@@ -23,33 +23,67 @@ export default function UPIConfigManager() {
     is_primary: false
   });
 
-  // Fetch UPI accounts
-  const { data: upiAccounts = [] } = useQuery({
-    queryKey: ['upi-accounts'],
+  // Fetch UPI accounts from AppConfig
+  const { data: configData, refetch } = useQuery({
+    queryKey: ['upi-accounts-config'],
     queryFn: async () => {
-      return await base44.entities.UPIAccount.list('-created_date');
+      const configs = await base44.entities.AppConfig.filter({
+        config_key: 'upi_accounts_list'
+      });
+      return configs[0] || { config_value: [] };
     }
   });
 
+  const upiAccounts = configData?.config_value || [];
+  const configId = configData?.id;
+
+  // Helper to save entire list
+  const saveList = async (newList) => {
+    const user = await base44.auth.me();
+    const payload = {
+      config_key: 'upi_accounts_list',
+      category: 'payment',
+      config_value: newList,
+      is_active: true,
+      updated_by: user.email,
+      updated_at: new Date().toISOString()
+    };
+
+    if (configId) {
+      await base44.entities.AppConfig.update(configId, payload);
+    } else {
+      await base44.entities.AppConfig.create({
+        ...payload,
+        created_by: user.email,
+        created_at: new Date().toISOString()
+      });
+    }
+  };
+
   const saveMutation = useMutation({
     mutationFn: async (data) => {
+      let newList = [...upiAccounts];
       if (editingAccount) {
-        return await base44.entities.UPIAccount.update(editingAccount.id, data);
+        newList = newList.map(acc => acc.id === editingAccount.id ? { ...data, id: acc.id } : acc);
       } else {
-        return await base44.entities.UPIAccount.create(data);
+        newList.push({ ...data, id: Date.now().toString(), created_date: new Date().toISOString() });
       }
+      await saveList(newList);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['upi-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['upi-accounts-config'] });
       toast.success(editingAccount ? 'UPI account updated!' : 'UPI account added!');
       handleCloseDialog();
     }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.UPIAccount.delete(id),
+    mutationFn: async (id) => {
+      const newList = upiAccounts.filter(acc => acc.id !== id);
+      await saveList(newList);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['upi-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['upi-accounts-config'] });
       toast.success('UPI account deleted');
       setDeleteConfirm(null);
     }
@@ -57,15 +91,14 @@ export default function UPIConfigManager() {
 
   const setPrimaryMutation = useMutation({
     mutationFn: async (accountId) => {
-      // First, set all accounts to non-primary
-      await Promise.all(upiAccounts.map(acc => 
-        base44.entities.UPIAccount.update(acc.id, { is_primary: false })
-      ));
-      // Then set the selected account as primary
-      return await base44.entities.UPIAccount.update(accountId, { is_primary: true });
+      const newList = upiAccounts.map(acc => ({
+        ...acc,
+        is_primary: acc.id === accountId
+      }));
+      await saveList(newList);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['upi-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['upi-accounts-config'] });
       toast.success('Primary account updated');
     }
   });
@@ -166,8 +199,8 @@ export default function UPIConfigManager() {
                 <div className="flex gap-4">
                   {/* QR Code Preview */}
                   <div className="w-20 h-20 bg-white rounded flex items-center justify-center flex-shrink-0">
-                    <img 
-                      src={account.qr_code_url} 
+                    <img
+                      src={account.qr_code_url}
                       alt="UPI QR"
                       className="w-full h-full object-contain"
                     />
@@ -270,14 +303,14 @@ export default function UPIConfigManager() {
               <Label className="text-white mb-2">UPI QR Code *</Label>
               {formData.qr_code_url && (
                 <div className="bg-zinc-950 p-4 rounded border border-zinc-800 flex justify-center mb-2">
-                  <img 
-                    src={formData.qr_code_url} 
+                  <img
+                    src={formData.qr_code_url}
                     alt="UPI QR Code"
                     className="w-40 h-40 object-contain"
                   />
                 </div>
               )}
-              
+
               <div className="flex gap-2">
                 <Input
                   type="file"

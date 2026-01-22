@@ -64,15 +64,24 @@ export default function PricingPage() {
   };
 
   // Fetch UPI config
+  // Fetch UPI config from AppConfig (list)
   const { data: upiConfig } = useQuery({
     queryKey: ['upi-config'],
     queryFn: async () => {
-      const configs = await base44.entities.AppConfig.filter({
-        config_key: 'upi_payment_config',
-        category: 'payment'
-      });
-      // Return found config or a safe default structure to prevent loading errors
-      return configs[0]?.config_value || { upi_id: '', qr_code_url: '' };
+      try {
+        const configs = await base44.entities.AppConfig.filter({
+          config_key: 'upi_accounts_list' // Updated key
+        });
+
+        const accounts = configs[0]?.config_value || [];
+        // Find primary or take first
+        const primary = accounts.find(a => a.is_primary) || accounts[0];
+
+        return primary || { upi_id: '', qr_code_url: '' };
+      } catch (e) {
+        console.error("Failed to fetch UPI config", e);
+        return { upi_id: '', qr_code_url: '' };
+      }
     }
   });
 

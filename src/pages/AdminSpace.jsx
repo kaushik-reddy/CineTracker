@@ -128,7 +128,13 @@ export default function AdminSpace() {
     );
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    // Not logged in -> Redirect
+    window.location.href = '/Login';
+    return null;
+  }
+
+  if (user.role !== 'admin') {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black p-4">
         <Card className="bg-red-500/10 border-red-500/50 max-w-md">
@@ -136,6 +142,9 @@ export default function AdminSpace() {
             <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
             <p className="text-zinc-300">This section is only accessible to administrators.</p>
+            <div className="mt-6">
+              <a href="/" className="text-purple-400 hover:text-purple-300 underline">Return Home</a>
+            </div>
           </CardContent>
         </Card>
       </div>

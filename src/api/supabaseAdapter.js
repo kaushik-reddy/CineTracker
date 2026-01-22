@@ -178,7 +178,7 @@ const auth = {
             id: user.id,
             email: user.email,
             name: user.user_metadata?.full_name || user.email?.split('@')[0],
-            role: 'admin' // Defaulting to admin for prototype. Real app needs lookup in 'User' table.
+            role: user.email?.toLowerCase() === 'kaushik4432@gmail.com' ? 'admin' : 'user'
         };
     },
     logout: async () => {

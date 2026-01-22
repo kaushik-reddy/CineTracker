@@ -243,7 +243,7 @@ export default function UPIConfigManager() {
                   </div>
 
                   {/* Debug Info for Image */}
-                  <div className="hidden">
+                  <div className="text-xs text-red-500 mt-2 block font-mono bg-black p-1 rounded">
                     Debug: {account.qr_code_url?.substring(0, 30)}... ({account.qr_code_url?.length} chars)
                   </div>
 

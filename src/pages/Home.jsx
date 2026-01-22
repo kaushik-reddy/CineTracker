@@ -202,7 +202,7 @@ export default function Home() {
         // For regular users, check subscription status
         const activeSubscriptions = await base44.entities.Subscription.filter({
           user_email: currentUser.email,
-          status: ['active', 'pending_payment', 'processing', 'rejected']
+          status: ['active', 'pending_payment', 'processing', 'rejected', 'trial']
         });
 
         // No subscription - redirect to Landing to choose plan

@@ -39,24 +39,42 @@ export default function UPIConfigManager() {
 
   // Helper to save entire list
   const saveList = async (newList) => {
-    const user = await base44.auth.me();
-    const payload = {
-      config_key: 'upi_accounts_list',
-      category: 'payment',
-      config_value: newList,
-      is_active: true,
-      updated_by: user.email,
-      updated_at: new Date().toISOString()
-    };
+    try {
+      console.log('Attempting to save list:', newList);
+      const user = await base44.auth.me();
+      console.log('Current User:', user);
 
-    if (configId) {
-      await base44.entities.AppConfig.update(configId, payload);
-    } else {
-      await base44.entities.AppConfig.create({
-        ...payload,
-        created_by: user.email,
-        created_at: new Date().toISOString()
-      });
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
+      const payload = {
+        config_key: 'upi_accounts_list',
+        category: 'payment',
+        config_value: newList,
+        is_active: true,
+        updated_by: user.email,
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Payload:', payload);
+
+      if (configId) {
+        console.log('Updating existing AppConfig:', configId);
+        await base44.entities.AppConfig.update(configId, payload);
+      } else {
+        console.log('Creating new AppConfig');
+        await base44.entities.AppConfig.create({
+          ...payload,
+          created_by: user.email,
+          created_at: new Date().toISOString()
+        });
+      }
+      console.log('Save successful');
+    } catch (err) {
+      console.error('Save failed:', err);
+      toast.error('Save failed: ' + (err.message || 'Unknown error'));
+      throw err; // Re-throw to stop mutation success
     }
   };
 

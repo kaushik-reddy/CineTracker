@@ -265,7 +265,7 @@ export default function CinematicScheduleCard({
                   {Math.floor(episodeRuntime / 60)}h {episodeRuntime % 60}m
                 </span>
                 <span className="flex items-center">
-                  <DeviceLogo device={deviceName} size="sm" className="text-zinc-300" />
+                  <DeviceLogo device={deviceName} size="lg" className="text-zinc-300" />
                 </span>
                 {schedule.seats_selected && schedule.seats_selected.length > 0 && (
                   <span className="flex items-center gap-1 text-purple-400">

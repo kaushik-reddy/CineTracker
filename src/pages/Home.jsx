@@ -383,7 +383,10 @@ export default function Home() {
 
   // Create schedule mutation
   const createScheduleMutation = useMutation({
-    mutationFn: (data) => base44.entities.WatchSchedule.create(data),
+    mutationFn: (data) => base44.entities.WatchSchedule.create({
+      ...data,
+      created_by: user?.email
+    }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['schedules'] });
       await queryClient.invalidateQueries({ queryKey: ['media'] });

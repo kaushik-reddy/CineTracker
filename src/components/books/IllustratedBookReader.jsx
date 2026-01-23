@@ -11,12 +11,13 @@ import { toast } from "sonner";
 import { bookCache } from "../pwa/BookCache";
 import { useOffline } from "../pwa/OfflineManager";
 import { IllustrationAgent } from "@/agents/IllustrationAgent";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-export default function IllustratedBookReader({ open, onClose, pdfUrl, bookTitle, initialPage = 1, totalPages, mediaId, media }) {
+function IllustratedBookReaderContent({ open, onClose, pdfUrl, bookTitle, initialPage = 1, totalPages, mediaId, media }) {
   console.log('PDF Reader Debug:', { pdfUrl, pdfVersion: pdfjs.version, workerSrc: pdfjs.GlobalWorkerOptions.workerSrc });
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(initialPage);
@@ -377,7 +378,7 @@ export default function IllustratedBookReader({ open, onClose, pdfUrl, bookTitle
                   minHeight: '600px'
                 }}>
                   <Document
-                    file={resolvedPdfUrl}
+                    file={pdfUrl}
                     onLoadSuccess={onDocumentLoadSuccess}
                     onLoadError={(error) => console.error('Error loading PDF:', error)}
                     loading={<div className="text-zinc-700 text-center py-10">Loading page...</div>}
@@ -485,5 +486,13 @@ export default function IllustratedBookReader({ open, onClose, pdfUrl, bookTitle
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export default function IllustratedBookReader(props) {
+  return (
+    <ErrorBoundary>
+      <IllustratedBookReaderContent {...props} />
+    </ErrorBoundary>
   );
 }

@@ -196,7 +196,7 @@ const entityNames = [
     // Core media entities
     'Media',
     'WatchSchedule',
-    'WatchParty',
+    'WatchSchedule',
 
     // User management
     'User',

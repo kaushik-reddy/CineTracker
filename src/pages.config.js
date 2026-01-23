@@ -6,7 +6,6 @@ import Pricing from './pages/Pricing';
 import Settings from './pages/Settings';
 import Spending from './pages/Spending';
 import Support from './pages/Support';
-import WatchParties from './pages/WatchParties';
 import __Layout from './Layout.jsx';
 
 
@@ -18,7 +17,7 @@ export const PAGES = {
     "Settings": Settings,
     "Spending": Spending,
     "Support": Support,
-    "WatchParties": WatchParties,
+    "Support": Support,
     "Login": Login,
 }
 

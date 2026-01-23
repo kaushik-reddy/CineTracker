@@ -144,7 +144,7 @@ const createEntityOperations = (entityName) => {
 };
 
 const entityNames = [
-    'Media', 'WatchSchedule', 'WatchParty', 'User', 'UserPermissions', 'UserRequest',
+    'Media', 'WatchSchedule', 'User', 'UserPermissions', 'UserRequest',
     'Subscription', 'PlatformSubscription', 'Plan', 'Payment', 'PaymentRequest', 'Invoice',
     'ConfigurableOption', 'AppConfig', 'UPIConfig', 'Logo', 'Option', 'Universe',
     'AdminNotification', 'ScheduledNotification', 'Notification', 'EmailTemplate',

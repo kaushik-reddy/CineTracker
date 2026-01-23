@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon, Clock, Bell, Film, Tv, TrendingUp, Play, AlertCircle, Sparkles, Star, Award, Users, Trophy, Book, Activity, Moon, Zap } from "lucide-react";
-import WatchPartyButton from "../watchparty/WatchPartyButton";
+
 import { format, isToday, isTomorrow, isThisWeek, startOfDay } from "date-fns";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -38,11 +38,11 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
     const allMedia = Object.values(mediaMap);
     const recent = allMedia.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 6);
     setRecentlyAdded(recent);
-    
+
     // Get unscheduled recommendations with episode info
     const scheduledIds = new Set(schedules.filter(s => s.status !== 'completed').map(s => s.media_id));
     const unwatched = allMedia.filter(m => m.status !== 'watched' && !scheduledIds.has(m.id));
-    
+
     // For series, find next episode to watch
     const withEpisodeInfo = unwatched.map(m => {
       if (m.type === 'series') {
@@ -52,7 +52,7 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
           const nextSeason = lastCompleted.season_number || 1;
           const nextEpisode = (lastCompleted.episode_number || 0) + 1;
           const episodesInSeason = m.episodes_per_season?.[nextSeason - 1] || 0;
-          
+
           if (nextEpisode <= episodesInSeason) {
             return { ...m, nextSeason, nextEpisode };
           } else if (nextSeason < (m.seasons_count || 0)) {
@@ -64,7 +64,7 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
       }
       return m;
     });
-    
+
     // Prioritize by rating, then by year
     const sorted = withEpisodeInfo.sort((a, b) => {
       if (a.rating && b.rating) return b.rating - a.rating;
@@ -72,7 +72,7 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
       if (b.rating) return 1;
       return (b.year || 0) - (a.year || 0);
     }).slice(0, 5);
-    
+
     setRecommendations(sorted);
   }, [mediaMap, schedules]);
 
@@ -83,7 +83,7 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
       return isToday(new Date(s.scheduled_date));
     }).sort((a, b) => new Date(a.scheduled_date) - new Date(b.scheduled_date)).slice(0, 5);
   }, [schedules]);
-  
+
   const nextSchedule = useMemo(() => {
     const upcoming = schedules.filter(s => s.status === 'scheduled' && new Date(s.scheduled_date) > new Date())
       .sort((a, b) => new Date(a.scheduled_date) - new Date(b.scheduled_date));
@@ -159,7 +159,7 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
         }
         return sum + runtime;
       }, 0);
-      
+
       const watchStreak = (() => {
         const sortedDates = completedSchedules.map(s => new Date(s.started_at || s.updated_date).toDateString()).sort((a, b) => new Date(b) - new Date(a));
         const uniqueDates = [...new Set(sortedDates)];
@@ -189,23 +189,23 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
       setSeasonalInsights([]);
       return;
     }
-    
+
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentSeason = currentMonth < 3 ? 'winter' : currentMonth < 6 ? 'spring' : currentMonth < 9 ? 'summer' : 'fall';
-    
+
     const insights = [];
     const byTime = { morning: {}, afternoon: {}, evening: {}, night: {} };
     const recentMonths = {};
-    
+
     completedSchedules.forEach(s => {
       const media = mediaMap[s.media_id];
       if (!media) return;
-      
+
       const date = new Date(s.updated_date);
       const hour = date.getHours();
       const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
-      
+
       // Time of day patterns
       const timeSlot = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : hour < 22 ? 'evening' : 'night';
       if (!byTime[timeSlot].count) byTime[timeSlot] = { count: 0, genres: {} };
@@ -213,14 +213,14 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
       (media.genre || []).forEach(g => {
         byTime[timeSlot].genres[g] = (byTime[timeSlot].genres[g] || 0) + 1;
       });
-      
+
       // Recent month patterns
       if (!recentMonths[monthKey]) recentMonths[monthKey] = { count: 0, types: {}, duration: 0 };
       recentMonths[monthKey].count++;
       recentMonths[monthKey].types[media.type] = (recentMonths[monthKey].types[media.type] || 0) + 1;
       recentMonths[monthKey].duration += media.runtime_minutes || 0;
     });
-    
+
     // Find dominant time slot
     const timeSlots = Object.entries(byTime).filter(([_, data]) => data.count > 0).sort((a, b) => b[1].count - a[1].count);
     if (timeSlots.length > 0) {
@@ -231,7 +231,7 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
         icon: Clock
       });
     }
-    
+
     // Recent trend
     const sortedMonths = Object.entries(recentMonths).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 3);
     if (sortedMonths.length > 0) {
@@ -244,7 +244,7 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
         });
       }
     }
-    
+
     // Consistency check
     const last30Days = completedSchedules.filter(s => {
       const daysDiff = (now - new Date(s.updated_date)) / (1000 * 60 * 60 * 24);
@@ -261,7 +261,7 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
         icon: Moon
       });
     }
-    
+
     setSeasonalInsights(insights.slice(0, 3));
   }, [completedSchedules, mediaMap]);
 
@@ -270,23 +270,23 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
     // Include completed watches, active sessions, scheduled sessions
     const now = new Date();
     const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
+
     // Recent completed watches - USE ACTUAL WATCHED DATE
     const recentCompleted = completedSchedules.filter(s => {
       const watchedDate = new Date(s.rating_submitted_at || s.started_at || s.updated_date);
       return watchedDate >= last7Days;
     });
-    
+
     // Active watching/paused sessions
-    const activeSessions = schedules.filter(s => 
+    const activeSessions = schedules.filter(s =>
       (s.status === 'in_progress' || s.status === 'paused') && s.elapsed_seconds > 0
     );
-    
+
     // Recently scheduled (last 7 days of scheduling activity)
-    const recentlyScheduled = schedules.filter(s => 
+    const recentlyScheduled = schedules.filter(s =>
       s.status === 'scheduled' && new Date(s.created_date) >= last7Days
     );
-    
+
     // Calculate total watch time from completed + active progress
     const completedMinutes = recentCompleted.reduce((sum, s) => {
       const media = mediaMap[s.media_id];
@@ -298,21 +298,21 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
       }
       return sum + runtime;
     }, 0);
-    
+
     const activeMinutes = activeSessions.reduce((sum, s) => {
       return sum + Math.floor(s.elapsed_seconds / 60);
     }, 0);
-    
+
     const totalMinutes = completedMinutes + activeMinutes;
     const hours = Math.floor(totalMinutes / 60);
-    
+
     // Check for late-night sessions (10pm - 4am) - USE ACTUAL WATCHED DATE
     const lateNightSessions = [...recentCompleted, ...activeSessions].filter(s => {
       const watchedDate = new Date(s.rating_submitted_at || s.started_at || s.scheduled_date);
       const startHour = watchedDate.getHours();
       return startHour >= 22 || startHour < 4;
     }).length;
-    
+
     // Check for back-to-back sessions (less than 1hr gap) - USE ACTUAL WATCHED DATES
     const sortedSessions = recentCompleted.sort((a, b) => {
       const aDate = new Date(a.rating_submitted_at || a.started_at || a.updated_date);
@@ -321,12 +321,12 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
     });
     let backToBackCount = 0;
     for (let i = 1; i < sortedSessions.length; i++) {
-      const prevEnd = new Date(sortedSessions[i-1].rating_submitted_at || sortedSessions[i-1].updated_date);
+      const prevEnd = new Date(sortedSessions[i - 1].rating_submitted_at || sortedSessions[i - 1].updated_date);
       const currStart = new Date(sortedSessions[i].rating_submitted_at || sortedSessions[i].started_at || sortedSessions[i].updated_date);
       const gapMinutes = (currStart - prevEnd) / (1000 * 60);
       if (gapMinutes < 60) backToBackCount++;
     }
-    
+
     // Dynamic threshold based on signals
     const fatigueScore = (
       (hours >= 15 ? 3 : hours >= 10 ? 2 : hours >= 7 ? 1 : 0) +
@@ -334,13 +334,13 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
       (backToBackCount >= 3 ? 2 : backToBackCount >= 2 ? 1 : 0) +
       (recentCompleted.length >= 10 ? 2 : recentCompleted.length >= 7 ? 1 : 0)
     );
-    
+
     if (fatigueScore >= 4) {
       const reasons = [];
       if (hours >= 10) reasons.push(`${hours}h watch time`);
       if (lateNightSessions >= 2) reasons.push(`${lateNightSessions} late-night sessions`);
       if (backToBackCount >= 2) reasons.push(`${backToBackCount} back-to-back watches`);
-      
+
       // Context-aware message pool
       const messagePool = {
         highHours: [
@@ -364,7 +364,7 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
           `Active watch week: ${reasons.join(', ')}`
         ]
       };
-      
+
       // Context-aware suggestion pool
       const suggestionPool = {
         highHours: [
@@ -393,11 +393,11 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
           'Watch something lighter or shorter for variety'
         ]
       };
-      
+
       // Determine primary context
       let messageCategory = 'general';
       let suggestionCategory = 'highHours';
-      
+
       if (hours >= 15) {
         messageCategory = 'highHours';
         suggestionCategory = 'highHours';
@@ -417,29 +417,29 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
         messageCategory = 'highHours';
         suggestionCategory = Math.random() < 0.5 ? 'contentSwitch' : 'deviceSwitch';
       }
-      
+
       // Get last shown message to avoid repetition
       const lastShownKey = 'fatigue_last_message';
       const lastShown = localStorage.getItem(lastShownKey);
-      
+
       // Select message (avoid repeating last one)
       const messages = messagePool[messageCategory];
       let selectedMessage = messages[Math.floor(Math.random() * messages.length)];
-      
+
       if (lastShown && messages.includes(lastShown)) {
         const otherMessages = messages.filter(m => m !== lastShown);
         if (otherMessages.length > 0) {
           selectedMessage = otherMessages[Math.floor(Math.random() * otherMessages.length)];
         }
       }
-      
+
       // Select suggestion
       const suggestions = suggestionPool[suggestionCategory];
       const selectedSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
-      
+
       // Store selected message
       localStorage.setItem(lastShownKey, selectedMessage);
-      
+
       setFatigueAlert({
         message: selectedMessage,
         suggestion: selectedSuggestion
@@ -453,16 +453,16 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
   useEffect(() => {
     const allMedia = Object.values(mediaMap);
     const watchCounts = {};
-    
+
     completedSchedules.forEach(s => {
       watchCounts[s.media_id] = (watchCounts[s.media_id] || 0) + 1;
     });
-    
+
     const gems = allMedia
       .filter(m => m.rating >= 4 && (watchCounts[m.id] || 0) <= 1)
       .sort((a, b) => (b.rating || 0) - (a.rating || 0))
       .slice(0, 3);
-    
+
     setHiddenGems(gems);
   }, [mediaMap, completedSchedules]);
 
@@ -471,25 +471,25 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
     const now = new Date();
     const notifications = [];
     const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
+
     // Helper: Check if a schedule was actively watched today (not just added to history)
     const wasWatchedToday = (schedule) => {
       const today = new Date().toDateString();
-      
+
       // Check if any active watch activity happened today
       const startedToday = schedule.started_at && new Date(schedule.started_at).toDateString() === today;
       const resumedToday = schedule.last_resumed_at && new Date(schedule.last_resumed_at).toDateString() === today;
       const completedToday = schedule.rating_submitted_at && new Date(schedule.rating_submitted_at).toDateString() === today;
-      
+
       return startedToday || resumedToday || completedToday;
     };
-    
+
     // 1. Upcoming soon (within 10 minutes)
     schedules.forEach(s => {
       if (s.status !== 'scheduled') return;
       const scheduleTime = new Date(s.scheduled_date);
       const diffMinutes = (scheduleTime - now) / (1000 * 60);
-      
+
       if (diffMinutes > 0 && diffMinutes <= 10) {
         const media = mediaMap[s.media_id];
         if (media) {
@@ -502,14 +502,14 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
         }
       }
     });
-    
+
     // 2. Overdue schedules (more than 30 min late)
     const overdueSchedules = schedules.filter(s => {
       if (s.status !== 'scheduled') return false;
       const diffMinutes = (now - new Date(s.scheduled_date)) / (1000 * 60);
       return diffMinutes > 30 && s.elapsed_seconds === 0;
     });
-    
+
     if (overdueSchedules.length >= 3) {
       notifications.push({
         type: 'delayed',
@@ -517,14 +517,14 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
         message: `${overdueSchedules.length} titles are waiting for you - catch up soon!`
       });
     }
-    
+
     // 3. Paused sessions reminder (paused for 1+ days)
     const stuckPaused = schedules.filter(s => {
       if (s.status !== 'paused') return false;
       const hoursSincePause = (now - new Date(s.updated_date)) / (1000 * 60 * 60);
       return hoursSincePause >= 24;
     });
-    
+
     if (stuckPaused.length > 0) {
       const media = mediaMap[stuckPaused[0].media_id];
       notifications.push({
@@ -533,20 +533,20 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
         message: `"${media?.title}" has been paused for a while - ready to resume?`
       });
     }
-    
+
     // 4. Streak at risk (watched yesterday but not today, after 8pm)
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toDateString();
-    
+
     const last24Hours = completedSchedules.filter(s => wasWatchedToday(s) || (
       (s.started_at && new Date(s.started_at).toDateString() === yesterdayStr) ||
       (s.last_resumed_at && new Date(s.last_resumed_at).toDateString() === yesterdayStr) ||
       (s.rating_submitted_at && new Date(s.rating_submitted_at).toDateString() === yesterdayStr)
     ));
-    
+
     const todayWatches = completedSchedules.filter(s => wasWatchedToday(s));
-    
+
     if (last24Hours.length > 0 && todayWatches.length === 0 && now.getHours() >= 20) {
       notifications.push({
         type: 'warning',
@@ -554,11 +554,11 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
         message: `Your watch streak is at risk! Watch something today to keep it going`
       });
     }
-    
+
     // 5. High activity alert (actively watched 3+ items today)
     const todayActivelyWatched = completedSchedules.filter(s => wasWatchedToday(s));
     const todayCount = todayActivelyWatched.length;
-    
+
     if (todayCount >= 3) {
       notifications.push({
         type: 'success',
@@ -566,16 +566,16 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
         message: `You've already watched ${todayCount} titles today! You're on fire!`
       });
     }
-    
+
     // 6. Unwatched library reminder
     const unwatchedCount = Object.values(mediaMap).filter(m => m.status === 'unwatched').length;
     const recentActivity = completedSchedules.filter(s => {
       const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
       return (s.started_at && new Date(s.started_at) >= threeDaysAgo) ||
-             (s.last_resumed_at && new Date(s.last_resumed_at) >= threeDaysAgo) ||
-             (s.rating_submitted_at && new Date(s.rating_submitted_at) >= threeDaysAgo);
+        (s.last_resumed_at && new Date(s.last_resumed_at) >= threeDaysAgo) ||
+        (s.rating_submitted_at && new Date(s.rating_submitted_at) >= threeDaysAgo);
     }).length;
-    
+
     if (unwatchedCount > 10 && recentActivity === 0) {
       notifications.push({
         type: 'info',
@@ -583,7 +583,7 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
         message: `You have ${unwatchedCount} unwatched titles collecting dust - explore your library!`
       });
     }
-    
+
     // Sort by priority and take top 3
     setSmartNotifications(
       notifications
@@ -726,7 +726,7 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
       '"I can bring you in warm, or I can bring you in cold"', '"Wherever I go, he goes"',
       '"That\'s my line"', '"I like those odds"', '"Never tell me the odds!"'
     ];
-    
+
     return movieQuotes[Math.floor(Math.random() * movieQuotes.length)];
   }, []); // Empty deps - only runs on mount
 
@@ -760,9 +760,9 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
                     </div>
                   </div>
                   {user?.profile_picture && (
-                    <img 
-                      src={user.profile_picture} 
-                      alt="Profile" 
+                    <img
+                      src={user.profile_picture}
+                      alt="Profile"
                       className="w-10 sm:w-12 h-10 sm:h-12 rounded-full border-2 border-amber-400 object-cover flex-shrink-0"
                     />
                   )}
@@ -770,16 +770,9 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
               </div>
             </div>
             <p className="text-zinc-400 text-xs sm:text-sm md:text-base mb-3 sm:mb-4 break-words">Welcome back to CineTracker. Ready for your next watch?</p>
-            
+
             {/* Watch Party Quick Access */}
-            <div className="mb-3">
-              <WatchPartyButton 
-                media={null} 
-                schedule={null}
-                size="sm"
-                className="w-full sm:w-auto"
-              />
-            </div>
+
 
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 md:gap-3">
               <button onClick={() => onViewLibrary?.('movie')} className="bg-zinc-800/60 hover:bg-zinc-800 p-2 md:p-3 rounded-xl transition-all border border-zinc-700 hover:border-amber-500/50 hover:shadow-[0_0_30px_rgba(251,191,36,0.6)] text-left group">
@@ -832,28 +825,26 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {smartNotifications.map((notif, idx) => (
-                      <div
-                        key={`smart-${idx}`}
-                        className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg ${
-                          notif.type === 'upcoming' ? 'bg-emerald-500/10 border border-emerald-500/30' :
-                          notif.type === 'warning' ? 'bg-amber-500/10 border border-amber-500/30' :
+                    <div
+                      key={`smart-${idx}`}
+                      className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg ${notif.type === 'upcoming' ? 'bg-emerald-500/10 border border-emerald-500/30' :
+                        notif.type === 'warning' ? 'bg-amber-500/10 border border-amber-500/30' :
                           notif.type === 'success' ? 'bg-purple-500/10 border border-purple-500/30' :
-                          notif.type === 'info' ? 'bg-blue-500/10 border border-blue-500/30' :
-                          'bg-orange-500/10 border border-orange-500/30'
+                            notif.type === 'info' ? 'bg-blue-500/10 border border-blue-500/30' :
+                              'bg-orange-500/10 border border-orange-500/30'
                         }`}
-                      >
-                        <Bell className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${
-                          notif.type === 'upcoming' ? 'text-emerald-400' :
-                          notif.type === 'warning' ? 'text-amber-400' :
+                    >
+                      <Bell className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${notif.type === 'upcoming' ? 'text-emerald-400' :
+                        notif.type === 'warning' ? 'text-amber-400' :
                           notif.type === 'success' ? 'text-purple-400' :
-                          notif.type === 'info' ? 'text-blue-400' :
-                          'text-orange-400'
+                            notif.type === 'info' ? 'text-blue-400' :
+                              'text-orange-400'
                         }`} />
-                        <span className="text-white text-xs sm:text-sm break-words">
-                          {notif.message}
-                        </span>
-                      </div>
-                    ))}
+                      <span className="text-white text-xs sm:text-sm break-words">
+                        {notif.message}
+                      </span>
+                    </div>
+                  ))}
                   {notifications.map((notif, idx) => {
                     // Add type label to notifications
                     const typeBreakdown = { movies: 0, series: 0, books: 0 };
@@ -883,17 +874,15 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
                     return (
                       <div
                         key={idx}
-                        className={`flex items-center gap-3 p-2 md:p-3 rounded-lg ${
-                          notif.type === 'warning' ? 'bg-orange-500/10 border border-orange-500/30' :
+                        className={`flex items-center gap-3 p-2 md:p-3 rounded-lg ${notif.type === 'warning' ? 'bg-orange-500/10 border border-orange-500/30' :
                           notif.type === 'info' ? 'bg-blue-500/10 border border-blue-500/30' :
-                          'bg-emerald-500/10 border border-emerald-500/30'
-                        }`}
+                            'bg-emerald-500/10 border border-emerald-500/30'
+                          }`}
                       >
-                        <notif.icon className={`w-4 md:w-5 h-4 md:h-5 flex-shrink-0 ${
-                          notif.type === 'warning' ? 'text-orange-400' :
+                        <notif.icon className={`w-4 md:w-5 h-4 md:h-5 flex-shrink-0 ${notif.type === 'warning' ? 'text-orange-400' :
                           notif.type === 'info' ? 'text-blue-400' :
-                          'text-emerald-400'
-                        }`} />
+                            'text-emerald-400'
+                          }`} />
                         <div className="flex-1">
                           <span className="text-white text-xs md:text-sm block">{notif.message}</span>
                           {typeDetails && (
@@ -1044,14 +1033,14 @@ export default function HomePage({ schedules, mediaMap, user, onWatch, onSchedul
             <CardContent className="flex-1 overflow-hidden">
               <div className="space-y-2 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-700">
                 {hiddenGems.map((media) => (
-                <div
-                  key={media.id}
-                  onClick={() => onNavigateToMedia?.(media.id, 'library')}
-                  className="group cursor-pointer p-2 md:p-3 bg-zinc-800/50 hover:bg-zinc-800 rounded-lg border border-zinc-700 hover:border-amber-500/50 transition-all"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs md:text-sm text-white font-medium truncate">{media.title}</p>
+                  <div
+                    key={media.id}
+                    onClick={() => onNavigateToMedia?.(media.id, 'library')}
+                    className="group cursor-pointer p-2 md:p-3 bg-zinc-800/50 hover:bg-zinc-800 rounded-lg border border-zinc-700 hover:border-amber-500/50 transition-all"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs md:text-sm text-white font-medium truncate">{media.title}</p>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <div className="flex items-center gap-1">
                             <span className="text-[10px] md:text-xs text-amber-400">{media.rating.toFixed(1)}</span>

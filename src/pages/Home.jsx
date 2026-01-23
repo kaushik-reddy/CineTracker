@@ -41,9 +41,7 @@ import IllustratedBookReader from "@/components/books/IllustratedBookReader";
 import FloatingBubbles from "@/components/home/FloatingBubbles";
 import AdminSpace from "./AdminSpace";
 import Spending from "./Spending";
-import CreateWatchParty from "@/components/watchparty/CreateWatchParty";
-import JoinWatchParty from "@/components/watchparty/JoinWatchParty";
-import WatchPartyPlayer from "@/components/watchparty/WatchPartyPlayer";
+
 
 export default function Home() {
   const navigate = useNavigate();
@@ -100,10 +98,7 @@ export default function Home() {
   const { executeAction } = useAction();
 
   // Watch Party state
-  const [showCreateParty, setShowCreateParty] = useState(false);
-  const [showJoinParty, setShowJoinParty] = useState(false);
-  const [selectedParty, setSelectedParty] = useState(null);
-  const [selectedPartyMedia, setSelectedPartyMedia] = useState(null);
+
 
   // Profile page state
   const [profileEditing, setProfileEditing] = useState(false);
@@ -292,23 +287,7 @@ export default function Home() {
     return mediaList[0]?.created_date; // Already sorted by -created_date
   }, [mediaList]);
 
-  // Fetch watch parties
-  const { data: myParties = [], refetch: refetchParties } = useQuery({
-    queryKey: ['my-watch-parties', user?.email, user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const parties = await base44.entities.WatchParty.filter({
-        status: { $in: ['scheduled', 'live'] }
-      }, '-scheduled_start');
 
-      return parties.filter(p =>
-        p.host_email === user.email ||
-        p.participants?.some(pt => pt.user_id === user.id)
-      );
-    },
-    enabled: !!user,
-    refetchInterval: view === 'watchparty' ? 2000 : false
-  });
 
   // Fetch schedules (user-isolated + shared schedules)
   const { data: schedules = [], isLoading: schedulesLoading } = useQuery({
@@ -2598,253 +2577,56 @@ export default function Home() {
                               <Spending />
                             </motion.div> :
 
-                            view === 'watchparty' ?
-                              <motion.div
-                                key="watchparty"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}>
 
-                                <div className="flex items-center justify-between mb-6">
-                                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <Users className="w-6 h-6 text-purple-400" />
-                                    Watch Parties
-                                  </h2>
-                                  <PageHelpButton
-                                    title="How to use Watch Parties"
-                                    content={
-                                      <div className="space-y-3">
-                                        <p>Watch Parties let you watch movies or series together with friends in real-time.</p>
-                                        <div className="space-y-2">
-                                          <p className="font-semibold text-white">Creating a Party:</p>
-                                          <ul className="list-disc list-inside space-y-1 text-sm">
-                                            <li>Click Create Party</li>
-                                            <li>Select a title from your library</li>
-                                            <li>Set the party name and schedule</li>
-                                            <li>Choose max participants</li>
-                                            <li>Get an invite code to share</li>
-                                          </ul>
-                                        </div>
-                                        <div className="space-y-2">
-                                          <p className="font-semibold text-white">Joining a Party:</p>
-                                          <ul className="list-disc list-inside space-y-1 text-sm">
-                                            <li>Click Join Party</li>
-                                            <li>Enter the invite code you received</li>
-                                            <li>Wait for host approval if required</li>
-                                            <li>Join when party starts</li>
-                                          </ul>
-                                        </div>
-                                        <div className="space-y-2">
-                                          <p className="font-semibold text-white">During Party:</p>
-                                          <ul className="list-disc list-inside space-y-1 text-sm">
-                                            <li>Synchronized playback with all participants</li>
-                                            <li>Live chat with other viewers</li>
-                                            <li>Host controls play/pause for everyone</li>
-                                            <li>See who is watching in real-time</li>
-                                          </ul>
-                                        </div>
-                                        <p className="text-sm text-amber-400">Tip: Host can delete parties and control playback</p>
+
+                            <motion.div
+                              key="stats"
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -20 }}>
+
+                              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                                <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
+                                  <BarChart3 className="w-5 h-5 text-amber-500" />
+                                  Watching Statistics
+                                </h2>
+                                <PageHelpButton
+                                  title="How to use Statistics"
+                                  content={
+                                    <div className="space-y-3">
+                                      <p>Statistics provide insights into your watching habits and preferences.</p>
+                                      <div className="space-y-2">
+                                        <p className="font-semibold text-white">Available Charts:</p>
+                                        <ul className="list-disc list-inside space-y-1 text-sm">
+                                          <li>Watch time over months and years</li>
+                                          <li>Content type distribution (movies vs series vs books)</li>
+                                          <li>Genre preferences and trends</li>
+                                          <li>Platform usage breakdown</li>
+                                          <li>Rating patterns and averages</li>
+                                          <li>Watch time by day of week</li>
+                                        </ul>
                                       </div>
-                                    }
-                                  />
-                                </div>
-
-                                {/* Action buttons */}
-                                <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                                  <Button onClick={() => setShowJoinParty(true)} className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white">
-                                    <Search className="w-4 h-4 mr-2" />
-                                    Join Party
-                                  </Button>
-                                  <Button onClick={() => setShowCreateParty(true)} className="flex-1 bg-gradient-to-r from-purple-500 to-emerald-500 text-white">
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Create Party
-                                  </Button>
-                                </div>
-
-                                {/* Parties list */}
-                                {myParties.length === 0 ? (
-                                  <div className="text-center py-12 sm:py-20">
-                                    <Users className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-zinc-700 mb-4" />
-                                    <h3 className="text-lg sm:text-xl font-semibold text-zinc-300 mb-2">No watch parties yet</h3>
-                                    <p className="text-sm sm:text-base text-zinc-500 mb-6">Create or join a party to watch with friends</p>
-                                    <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-                                      <Button onClick={() => setShowCreateParty(true)} className="bg-purple-500 hover:bg-purple-600 text-white">
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Create Party
-                                      </Button>
-                                      <Button onClick={() => setShowJoinParty(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white">
-                                        <Search className="w-4 h-4 mr-2" />
-                                        Join Party
-                                      </Button>
+                                      <p className="text-sm text-amber-400">Tip: Stats update automatically as you complete more titles</p>
                                     </div>
-                                  </div>
-                                ) : (
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                                    {myParties.map((party) => {
-                                      const partyMedia = mediaMap[party.media_id];
-                                      const isHost = party.host_email === user?.email;
+                                  }
+                                />
+                              </div>
+                              {completedSchedules.length === 0 ?
+                                <div className="text-center py-20">
+                                  <BarChart3 className="w-16 h-16 mx-auto text-zinc-700 mb-4" />
+                                  <h3 className="text-xl font-semibold text-zinc-300 mb-2">No stats available yet</h3>
+                                  <p className="text-zinc-500">Start watching and completing titles to see your stats</p>
+                                </div> :
 
-                                      return (
-                                        <motion.div
-                                          key={party.id}
-                                          initial={{ opacity: 0, y: 20 }}
-                                          animate={{ opacity: 1, y: 0 }}
-                                        >
-                                          <Card className="bg-zinc-900/80 border-zinc-800 hover:border-purple-500/50 transition-all overflow-hidden h-full">
-                                            <CardContent className="p-0">
-                                              {partyMedia?.poster_url && (
-                                                <div className="relative h-40 sm:h-48 overflow-hidden">
-                                                  <img src={partyMedia.poster_url} alt={partyMedia.title} className="w-full h-full object-cover" />
-                                                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/50 to-transparent" />
-                                                  {party.status === 'live' && (
-                                                    <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex items-center gap-2 px-2 sm:px-3 py-1 bg-red-500/90 rounded-full">
-                                                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                                                      <span className="text-xs text-white font-bold">LIVE</span>
-                                                    </div>
-                                                  )}
-                                                  {isHost && (
-                                                    <div className="absolute top-2 sm:top-3 left-2 sm:left-3 px-2 sm:px-3 py-1 bg-purple-500/90 rounded-full">
-                                                      <span className="text-xs text-white font-bold">👑 HOST</span>
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              )}
+                                <StatsView
+                                  completedSchedules={completedSchedules}
+                                  mediaMap={mediaMap}
+                                  mediaList={mediaList}
+                                  onRateChange={handleRateChange}
+                                  onDelete={handleDeleteHistory} />
 
-                                              <div className="p-3 sm:p-4 space-y-3">
-                                                <h3 className="text-base sm:text-lg font-bold text-white line-clamp-1">{party.party_name}</h3>
-                                                <p className="text-xs sm:text-sm text-zinc-400 line-clamp-1">{partyMedia?.title}</p>
-
-                                                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-zinc-400">
-                                                  <div className="flex items-center gap-1">
-                                                    <Calendar className="w-3 h-3" />
-                                                    <span className="hidden sm:inline">{new Date(party.scheduled_start).toLocaleDateString()}</span>
-                                                    <span className="sm:hidden">{new Date(party.scheduled_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                                  </div>
-                                                  <div className="flex items-center gap-1">
-                                                    <Clock className="w-3 h-3" />
-                                                    {new Date(party.scheduled_start).toLocaleTimeString('en-US', {
-                                                      hour: '2-digit',
-                                                      minute: '2-digit'
-                                                    })}
-                                                  </div>
-                                                  <div className="flex items-center gap-1">
-                                                    <Users className="w-3 h-3" />
-                                                    {party.participants?.length || 0} / {party.max_participants}
-                                                  </div>
-                                                </div>
-
-                                                {party.participants && party.participants.length > 0 && (
-                                                  <div className="flex -space-x-2">
-                                                    {party.participants.slice(0, 5).map((p, i) => (
-                                                      <div
-                                                        key={i}
-                                                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-purple-500 to-emerald-500 flex items-center justify-center text-xs font-bold text-white border-2 border-zinc-900"
-                                                      >
-                                                        {p.name[0]}
-                                                      </div>
-                                                    ))}
-                                                    {party.participants.length > 5 && (
-                                                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-zinc-700 flex items-center justify-center text-xs text-white border-2 border-zinc-900">
-                                                        +{party.participants.length - 5}
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                )}
-
-                                                <div className="flex gap-2">
-                                                  <Button
-                                                    onClick={() => {
-                                                      if (partyMedia) {
-                                                        setSelectedPartyMedia(partyMedia);
-                                                        setSelectedParty(party);
-                                                      }
-                                                    }}
-                                                    className="flex-1 bg-gradient-to-r from-purple-500 to-emerald-500 hover:shadow-xl text-white text-sm"
-                                                  >
-                                                    <Play className="w-4 h-4 mr-2" />
-                                                    {party.status === 'live' ? 'Join Now' : 'Open'}
-                                                  </Button>
-                                                  {isHost && (
-                                                    <Button
-                                                      onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        if (confirm('Delete this watch party? This will remove it for all participants.')) {
-                                                          await executeAction('Deleting Party', async () => {
-                                                            const msgs = await base44.entities.ChatMessage.filter({ party_id: party.id });
-                                                            await Promise.all(msgs.map(msg => base44.entities.ChatMessage.delete(msg.id)));
-                                                            await base44.entities.WatchParty.delete(party.id);
-                                                            refetchParties();
-                                                          }, {
-                                                            successTitle: 'Party Deleted',
-                                                            successSubtitle: 'Watch party removed for all participants'
-                                                          });
-                                                        }
-                                                      }}
-                                                      className="bg-red-500 hover:bg-red-600 text-white"
-                                                      size="icon"
-                                                    >
-                                                      <X className="w-4 h-4" />
-                                                    </Button>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </CardContent>
-                                          </Card>
-                                        </motion.div>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </motion.div> :
-
-                              <motion.div
-                                key="stats"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}>
-
-                                <div className="flex items-center justify-between mb-4 sm:mb-6">
-                                  <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
-                                    <BarChart3 className="w-5 h-5 text-amber-500" />
-                                    Watching Statistics
-                                  </h2>
-                                  <PageHelpButton
-                                    title="How to use Statistics"
-                                    content={
-                                      <div className="space-y-3">
-                                        <p>Statistics provide insights into your watching habits and preferences.</p>
-                                        <div className="space-y-2">
-                                          <p className="font-semibold text-white">Available Charts:</p>
-                                          <ul className="list-disc list-inside space-y-1 text-sm">
-                                            <li>Watch time over months and years</li>
-                                            <li>Content type distribution (movies vs series vs books)</li>
-                                            <li>Genre preferences and trends</li>
-                                            <li>Platform usage breakdown</li>
-                                            <li>Rating patterns and averages</li>
-                                            <li>Watch time by day of week</li>
-                                          </ul>
-                                        </div>
-                                        <p className="text-sm text-amber-400">Tip: Stats update automatically as you complete more titles</p>
-                                      </div>
-                                    }
-                                  />
-                                </div>
-                                {completedSchedules.length === 0 ?
-                                  <div className="text-center py-20">
-                                    <BarChart3 className="w-16 h-16 mx-auto text-zinc-700 mb-4" />
-                                    <h3 className="text-xl font-semibold text-zinc-300 mb-2">No stats available yet</h3>
-                                    <p className="text-zinc-500">Start watching and completing titles to see your stats</p>
-                                  </div> :
-
-                                  <StatsView
-                                    completedSchedules={completedSchedules}
-                                    mediaMap={mediaMap}
-                                    mediaList={mediaList}
-                                    onRateChange={handleRateChange}
-                                    onDelete={handleDeleteHistory} />
-
-                                }
-                              </motion.div>
+                              }
+                            </motion.div>
           }
         </AnimatePresence>
       </main>
@@ -2998,33 +2780,7 @@ export default function Home() {
         </Dialog>
       )}
 
-      {/* Watch Party Modals */}
-      <CreateWatchParty
-        open={showCreateParty}
-        onClose={() => {
-          setShowCreateParty(false);
-          refetchParties();
-        }}
-        media={null}
-        schedule={null}
-      />
 
-      <JoinWatchParty
-        open={showJoinParty}
-        onClose={() => setShowJoinParty(false)}
-      />
-
-      {selectedParty && selectedPartyMedia && (
-        <WatchPartyPlayer
-          open={!!selectedParty}
-          onClose={() => {
-            setSelectedParty(null);
-            setSelectedPartyMedia(null);
-          }}
-          party={selectedParty}
-          media={selectedPartyMedia}
-        />
-      )}
 
       <Footer lastLibraryUpdate={lastLibraryUpdate} />
     </div>);

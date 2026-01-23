@@ -13,7 +13,6 @@ export default function AppHeader({ scheduleCount = 0, historyCount = 0, userRol
     { name: 'Library', icon: Library, view: 'library' },
     { name: 'Schedule', icon: Calendar, view: 'schedule', badge: scheduleCount, badgeColor: 'bg-orange-500' },
     { name: 'Timeline', icon: Calendar, view: 'timeline' },
-    { name: 'Watch Party', icon: Users, view: 'watchparty' },
     { name: 'History', icon: History, view: 'history', badge: historyCount, badgeColor: 'bg-emerald-500' },
     { name: 'Stats', icon: BarChart3, view: 'stats' },
     { name: 'Achievements', icon: Trophy, view: 'achievements' },

@@ -29,8 +29,6 @@ Respond with a JSON object matching this schema:
  * @param {string} language 
  */
 export async function fetchMediaDetails(title, type, language = 'English') {
-    if (!API_KEY) throw new Error("Missing VITE_OPENAI_API_KEY");
-
     const userPrompt = `
     Find details for the ${type}: "${title}".
     Language: ${language}.
@@ -39,11 +37,10 @@ export async function fetchMediaDetails(title, type, language = 'English') {
   `;
 
     try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        const response = await fetch("/api/openai-chat", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_KEY}`
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 model: "gpt-4o",
@@ -57,7 +54,7 @@ export async function fetchMediaDetails(title, type, language = 'English') {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error?.message || "OpenAI API Error");
+            throw new Error(error.error || "OpenAI API Error");
         }
 
         const data = await response.json();
@@ -75,8 +72,6 @@ export async function fetchMediaDetails(title, type, language = 'English') {
  * @param {string} pageText 
  */
 export async function generateIllustrationPrompt(bookTitle, pageNumber, pageText = "") {
-    if (!API_KEY) throw new Error("Missing VITE_OPENAI_API_KEY");
-
     const prompt = `
     You are an expert book illustrator.
     Context:
@@ -94,11 +89,10 @@ export async function generateIllustrationPrompt(bookTitle, pageNumber, pageText
   `;
 
     try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        const response = await fetch("/api/openai-chat", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_KEY}`
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 model: "gpt-4o",
@@ -123,28 +117,22 @@ export async function generateIllustrationPrompt(bookTitle, pageNumber, pageText
  * @param {string} prompt 
  */
 export async function generateImage(prompt) {
-    if (!API_KEY) throw new Error("Missing VITE_OPENAI_API_KEY");
-
     try {
-        const response = await fetch("https://api.openai.com/v1/images/generations", {
+        const response = await fetch("/api/openai-image", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_KEY}`
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "dall-e-3",
                 prompt: prompt,
-                n: 1,
                 size: "1024x1024",
-                quality: "standard", // "hd" is more expensive, standard is fine for illustrations
-                response_format: "url"
+                quality: "standard"
             })
         });
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error?.message || "OpenAI Image Error");
+            throw new Error(error.error || "OpenAI Image Error");
         }
 
         const data = await response.json();

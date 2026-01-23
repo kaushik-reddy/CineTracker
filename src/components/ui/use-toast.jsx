@@ -78,9 +78,9 @@ export const reducer = (state, action) => {
         toasts: state.toasts.map((t) =>
           t.id === toastId || toastId === undefined
             ? {
-                ...t,
-                open: false,
-              }
+              ...t,
+              open: false,
+            }
             : t
         ),
       };
@@ -121,6 +121,12 @@ function toast({ ...props }) {
 
   const dismiss = () =>
     dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id });
+
+  if (props.duration) {
+    setTimeout(() => {
+      dismiss();
+    }, props.duration);
+  }
 
   dispatch({
     type: actionTypes.ADD_TOAST,

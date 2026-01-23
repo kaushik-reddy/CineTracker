@@ -1,4 +1,11 @@
-const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+
+let genAI;
+if (API_KEY) {
+    genAI = new GoogleGenerativeAI(API_KEY);
+}
 
 const SYSTEM_PROMPT = `
 You remain a helpful assistant that outputs strictly JSON. 
@@ -23,7 +30,7 @@ Respond with a JSON object matching this schema:
 `;
 
 /**
- * Fetch details for a Movie, Series, or Book using OpenAI GPT-4o.
+ * Fetch details for a Movie, Series, or Book using Gemini.
  * @param {string} title 
  * @param {'movie'|'series'|'book'} type 
  * @param {string} language 
@@ -37,28 +44,24 @@ export async function fetchMediaDetails(title, type, language = 'English') {
   `;
 
     try {
-        const response = await fetch("/api/openai-chat", {
+        const response = await fetch("/api/gemini-chat", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "gpt-4o",
-                messages: [
-                    { role: "system", content: SYSTEM_PROMPT },
-                    { role: "user", content: userPrompt }
-                ],
-                response_format: { type: "json_object" }
+                systemPrompt: SYSTEM_PROMPT,
+                userPrompt
             })
         });
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || "OpenAI API Error");
+            throw new Error(error.error || "Gemini API Error");
         }
 
         const data = await response.json();
-        return JSON.parse(data.choices[0].message.content);
+        return data;
     } catch (error) {
         console.error("fetchMediaDetails failed:", error);
         throw error;
@@ -66,7 +69,7 @@ export async function fetchMediaDetails(title, type, language = 'English') {
 }
 
 /**
- * Generate a creative prompt for DALL-E using GPT-4o.
+ * Generate a creative prompt for image generation using Gemini.
  * @param {string} bookTitle 
  * @param {number} pageNumber 
  * @param {string} pageText 
@@ -89,23 +92,20 @@ export async function generateIllustrationPrompt(bookTitle, pageNumber, pageText
   `;
 
     try {
-        const response = await fetch("/api/openai-chat", {
+        const response = await fetch("/api/gemini-chat", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "gpt-4o",
-                messages: [
-                    { role: "system", content: "You are a creative assistant." },
-                    { role: "user", content: prompt }
-                ]
+                systemPrompt: "You are a creative assistant focused on visual descriptions for book illustrations.",
+                userPrompt: prompt
             })
         });
 
-        if (!response.ok) throw new Error("OpenAI Chat Error");
+        if (!response.ok) throw new Error("Gemini Chat Error");
         const data = await response.json();
-        return data.choices[0].message.content.trim();
+        return data.text || data.response;
     } catch (error) {
         console.error("generateIllustrationPrompt failed:", error);
         throw error;
@@ -113,30 +113,19 @@ export async function generateIllustrationPrompt(bookTitle, pageNumber, pageText
 }
 
 /**
- * Generate an image using DALL-E 3.
+ * Generate an image using Pollinations.ai (free service, no API key needed)
  * @param {string} prompt 
  */
 export async function generateImage(prompt) {
     try {
-        const response = await fetch("/api/openai-image", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                prompt: prompt,
-                size: "1024x1024",
-                quality: "standard"
-            })
-        });
+        // Enhance prompt for vintage book illustration style
+        const enhancedPrompt = `${prompt}. Style: vintage etching, ink drawing, woodcut, black and white, highly detailed, masterpiece.`;
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "OpenAI Image Error");
-        }
+        // Pollinations.ai - free image generation, no API key required
+        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1024&height=1024&nologo=true`;
 
-        const data = await response.json();
-        return { url: data.data[0].url };
+        // Return the direct URL (Pollinations generates on-demand)
+        return { url };
     } catch (error) {
         console.error("generateImage failed:", error);
         throw error;

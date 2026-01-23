@@ -29,7 +29,7 @@ import UpcomingSchedule from "@/components/media/UpcomingSchedule";
 import JumpTimeModal from "@/components/schedule/JumpTimeModal";
 import AdjustBookProgressModal from "@/components/media/AdjustBookProgressModal";
 import TimelineView from "@/components/media/TimelineViewNew";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import HistoryView from "@/components/history/HistoryView";
 import StatsView from "@/components/stats/StatsView";
 import HomePage from "@/components/home/HomePage";
@@ -99,6 +99,7 @@ export default function Home() {
   const { executeAction } = useAction();
 
   // Watch Party state
+  const [showWatchPartyModal, setShowWatchPartyModal] = useState(false);
 
 
   // Profile page state
@@ -1653,7 +1654,7 @@ export default function Home() {
                     </div>
                     <div className="flex gap-2 flex-wrap">
                       <Button
-                        onClick={() => toast({ title: "Coming Soon", description: "Watch Parties are coming soon!", duration: 5000 })}
+                        onClick={() => setShowWatchPartyModal(true)}
                         className="bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-xl text-white text-xs sm:text-sm h-9"
                       >
                         <Users className="w-4 h-4 mr-2" />
@@ -2782,6 +2783,35 @@ export default function Home() {
       )}
 
 
+
+
+      {/* Watch Party Coming Soon Modal */}
+      <Dialog open={showWatchPartyModal} onOpenChange={setShowWatchPartyModal}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Users className="w-6 h-6 text-purple-500" />
+              Watch Parties
+            </DialogTitle>
+            <DialogDescription className="text-zinc-400 pt-2 text-base">
+              This feature is currently under development. Experience shared viewing with friends coming soon!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 flex justify-center">
+            <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center animate-pulse">
+              <Users className="w-10 h-10 text-zinc-600" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => setShowWatchPartyModal(false)}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+            >
+              Understood, can't wait!
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer lastLibraryUpdate={lastLibraryUpdate} />
     </div>);

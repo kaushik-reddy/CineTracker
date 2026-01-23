@@ -5,21 +5,10 @@ import { Calendar as CalendarIcon, Clock, Play, Trash2, Edit2, Pause, Tv, Monito
 import { format, isToday, isTomorrow, isPast } from "date-fns";
 import { motion } from "framer-motion";
 import { PlatformBadge } from "../common/PlatformLogos";
-import { AudioFormatBadge, VideoFormatBadge } from "../common/DeviceAudioVideoIcons";
+import { AudioFormatBadge, VideoFormatBadge, DeviceLogo } from "../common/DeviceAudioVideoIcons";
 import { StudioLogos } from "../common/StudioLogo";
 
-const deviceIcons = {
-  "TV": Tv,
-  "Laptop": Monitor,
-  "Phone": Smartphone,
-  "Tablet": Smartphone,
-  "Projector": Monitor,
-  "E-Reader": Book,
-  "Physical Book": Book,
-  "Big Screen": Monitor,
-  "Theater": Film,
-  "Other": Monitor
-};
+// Device icons now handled by DeviceLogo component from DeviceAudioVideoIcons
 
 export default function CinematicScheduleCard({
   schedule,
@@ -47,7 +36,7 @@ export default function CinematicScheduleCard({
   const canEdit = userRole === 'admin' || userPermissions?.can_edit;
   const canDelete = userRole === 'admin' || userPermissions?.can_delete;
 
-  const DeviceIcon = deviceIcons[schedule.device || media.device] || Monitor;
+  const deviceName = schedule.device || media.device;
   const scheduleDate = new Date(schedule.scheduled_date);
   const now = new Date();
   const isOverdue = isPast(scheduleDate) && schedule.status === 'scheduled' && schedule.elapsed_seconds === 0;
@@ -135,7 +124,7 @@ export default function CinematicScheduleCard({
       animate={{ opacity: 1, y: 0 }}
       className="group"
     >
-      <Card 
+      <Card
         className={`${config.bgColor} border border-zinc-700/50 overflow-hidden relative shadow-2xl h-[384px] flex flex-col transition-all duration-300 hover-shadow`}
         style={{
           clipPath: `path('M 20,0 L calc(100% - 20),0 
@@ -185,7 +174,7 @@ export default function CinematicScheduleCard({
         }}
       >
         {/* Subtle inner border for depth */}
-        <div className="absolute inset-0 border border-zinc-600/30 pointer-events-none" 
+        <div className="absolute inset-0 border border-zinc-600/30 pointer-events-none"
           style={{
             clipPath: `path('M 20,0 L calc(100% - 20),0 
               C calc(100% - 20),0 calc(100% - 15),5 calc(100% - 15),10
@@ -254,7 +243,7 @@ export default function CinematicScheduleCard({
               {/* Title with episode after */}
               <div className="flex items-baseline justify-between gap-2 mb-1 flex-wrap">
                 <div className="flex items-baseline gap-2 flex-1 min-w-0">
-                  <h3 
+                  <h3
                     className="text-white font-bold text-base cursor-pointer hover:text-amber-400 transition-colors leading-tight"
                     onClick={() => onNavigate?.(media.id)}
                   >
@@ -276,8 +265,8 @@ export default function CinematicScheduleCard({
                   {Math.floor(episodeRuntime / 60)}h {episodeRuntime % 60}m
                 </span>
                 <span className="flex items-center gap-1">
-                  <DeviceIcon className="w-3 h-3" />
-                  {schedule.device || media.device}
+                  <DeviceLogo device={deviceName} size="xs" className="text-zinc-300" />
+                  {deviceName}
                 </span>
                 {schedule.seats_selected && schedule.seats_selected.length > 0 && (
                   <span className="flex items-center gap-1 text-purple-400">
@@ -332,8 +321,8 @@ export default function CinematicScheduleCard({
             {/* Right - Poster */}
             <div className="flex-shrink-0">
               {media.poster_url ? (
-                <img 
-                  src={media.poster_url} 
+                <img
+                  src={media.poster_url}
                   alt={media.title}
                   className="w-20 h-28 object-cover rounded-lg border-2 border-zinc-700/50 shadow-lg"
                 />

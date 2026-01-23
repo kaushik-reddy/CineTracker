@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from "@/api/base44Client";
 import { getLogo, subscribeToLogos } from "../admin/LogoCache.jsx";
+import { Tv, Monitor, Smartphone, Book, Film } from "lucide-react";
 
 // Official audio format logos - same pattern as platform logos
 const audioFormatLogos = {
@@ -69,9 +70,9 @@ const videoFormats = {
 export function AudioFormatBadge({ format, size = 'default' }) {
   const [customLogoUrl, setCustomLogoUrl] = useState(null);
   const defaultLogoUrl = audioFormatLogos[format];
-  const formatData = audioFormats[format] || { 
-    color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', 
-    label: format 
+  const formatData = audioFormats[format] || {
+    color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+    label: format
   };
 
   const sizeClasses = {
@@ -84,7 +85,7 @@ export function AudioFormatBadge({ format, size = 'default' }) {
 
   useEffect(() => {
     if (!format) return;
-    
+
     // Load from cache immediately
     const loadLogo = async () => {
       const logoUrl = await getLogo(format, 'format');
@@ -115,8 +116,8 @@ export function AudioFormatBadge({ format, size = 'default' }) {
 
   return (
     <div className="inline-flex items-center px-1 py-0.5">
-      <img 
-        src={logoUrl} 
+      <img
+        src={logoUrl}
         alt={format}
         className={`${sizeClasses[size]} max-w-[80px] object-contain`}
         style={{
@@ -136,9 +137,9 @@ export function AudioFormatBadge({ format, size = 'default' }) {
 export function VideoFormatBadge({ format, size = 'default' }) {
   const [customLogoUrl, setCustomLogoUrl] = useState(null);
   const defaultLogoUrl = videoFormatLogos[format];
-  const formatData = videoFormats[format] || { 
-    color: 'bg-zinc-600/20 text-zinc-400 border-zinc-600/30', 
-    label: format 
+  const formatData = videoFormats[format] || {
+    color: 'bg-zinc-600/20 text-zinc-400 border-zinc-600/30',
+    label: format
   };
 
   const sizeClasses = {
@@ -151,7 +152,7 @@ export function VideoFormatBadge({ format, size = 'default' }) {
 
   useEffect(() => {
     if (!format) return;
-    
+
     // Load from cache immediately
     const loadLogo = async () => {
       const logoUrl = await getLogo(format, 'format');
@@ -182,8 +183,8 @@ export function VideoFormatBadge({ format, size = 'default' }) {
 
   return (
     <div className="inline-flex items-center px-1 py-0.5">
-      <img 
-        src={logoUrl} 
+      <img
+        src={logoUrl}
         alt={format}
         className={`${sizeClasses[size]} w-auto object-contain`}
         style={{
@@ -198,4 +199,74 @@ export function VideoFormatBadge({ format, size = 'default' }) {
       />
     </div>
   );
+}
+
+// Fallback device icons mapping
+const deviceIcons = {
+  "TV": Tv,
+  "Laptop": Monitor,
+  "Phone": Smartphone,
+  "Tablet": Smartphone,
+  "Projector": Monitor,
+  "E-Reader": Book,
+  "Physical Book": Book,
+  "Kindle": Book,
+  "Big Screen": Monitor,
+  "Theater": Film,
+  "Other": Monitor
+};
+
+export function DeviceLogo({ device, size = 'default', className = '' }) {
+  const [customLogoUrl, setCustomLogoUrl] = useState(null);
+
+  const sizeClasses = {
+    xs: 'w-3 h-3',
+    sm: 'w-4 h-4',
+    default: 'w-5 h-5',
+    lg: 'w-6 h-6'
+  };
+
+  useEffect(() => {
+    if (!device) return;
+
+    // Load from cache immediately
+    const loadLogo = async () => {
+      const logoUrl = await getLogo(device, 'device');
+      setCustomLogoUrl(logoUrl);
+    };
+    loadLogo();
+
+    // Subscribe to cache updates for instant refresh
+    const unsubscribe = subscribeToLogos((cache) => {
+      const key = `device:${device}`;
+      if (cache[key]) {
+        setCustomLogoUrl(cache[key]);
+      }
+    });
+
+    return unsubscribe;
+  }, [device]);
+
+  // If custom logo exists, show it
+  if (customLogoUrl) {
+    return (
+      <img
+        src={customLogoUrl}
+        alt={device}
+        className={`${sizeClasses[size]} object-contain ${className}`}
+        style={{
+          filter: 'brightness(0) invert(1)',
+          mixBlendMode: 'screen'
+        }}
+        onError={(e) => {
+          // On error, hide image - component will re-render with fallback on next render
+          e.target.style.display = 'none';
+        }}
+      />
+    );
+  }
+
+  // Fallback to Lucide icon
+  const FallbackIcon = deviceIcons[device] || Monitor;
+  return <FallbackIcon className={`${sizeClasses[size]} ${className}`} />;
 }

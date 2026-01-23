@@ -374,7 +374,10 @@ export default function Home() {
 
   // Create media mutation
   const createMediaMutation = useMutation({
-    mutationFn: (data) => base44.entities.Media.create(data),
+    mutationFn: (data) => base44.entities.Media.create({
+      ...data,
+      created_by: user?.email
+    }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['media'] })
   });
 

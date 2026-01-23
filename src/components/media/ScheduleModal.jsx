@@ -23,7 +23,7 @@ const baseAudioFormats = [
 ];
 
 const baseVideoFormats = [
-  "SD", "HD", "Full HD", "4K UHD", "8K", "Dolby Vision", "HDR10", "HDR10+", 
+  "SD", "HD", "Full HD", "4K UHD", "8K", "Dolby Vision", "HDR10", "HDR10+",
   "IMAX", "IMAX Enhanced", "Other"
 ];
 
@@ -40,7 +40,7 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
   const [loading, setLoading] = useState(false);
   const [conflicts, setConflicts] = useState([]);
   const [aiSuggestion, setAiSuggestion] = useState(null);
-  
+
   // Seat selection state (UI only)
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [showSeatSelection, setShowSeatSelection] = useState(false);
@@ -85,61 +85,61 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
 
     const initializeSchedule = async () => {
       if (existingSchedule) {
-      const scheduleDate = new Date(existingSchedule.scheduled_date);
-      setDate(scheduleDate.toISOString().split('T')[0]);
-      setTime(scheduleDate.toTimeString().slice(0, 5));
-      setSeasonNumber(existingSchedule.season_number?.toString() || '1');
-      setEpisodeNumber(existingSchedule.episode_number?.toString() || '1');
-      setSessionDuration(existingSchedule.session_duration || 30);
-      setDevice(existingSchedule.device || media?.device || 'TV');
-      setAudioFormat(existingSchedule.audio_format || 'Stereo');
-      setVideoFormat(existingSchedule.video_format || 'HD');
-    } else if (media?.type === 'book') {
-      setSessionDuration(30);
-      setDevice('E-Reader');
-      setDate('');
-      setTime('');
-    } else if (media?.type === 'series') {
-      // Find next unwatched episode based on completed + scheduled
-      const allSchedules = await base44.entities.WatchSchedule.filter({ media_id: media.id });
-      const watchedEpisodes = allSchedules.filter(s => s.status === 'completed');
-      const scheduledEpisodes = allSchedules.filter(s => s.status !== 'completed');
-      
-      let foundNext = false;
-      
-      // Find next episode by checking each season
-      for (let s = 1; s <= (media.seasons_count || 0); s++) {
-        const episodesInSeason = media.episodes_per_season?.[s - 1] || 0;
-        for (let e = 1; e <= episodesInSeason; e++) {
-          const isWatched = watchedEpisodes.some(ep => ep.season_number === s && ep.episode_number === e);
-          const isScheduled = scheduledEpisodes.some(ep => ep.season_number === s && ep.episode_number === e);
-          
-          if (!isWatched && !isScheduled) {
-            setSeasonNumber(s.toString());
-            setEpisodeNumber(e.toString());
-            foundNext = true;
-            break;
+        const scheduleDate = new Date(existingSchedule.scheduled_date);
+        setDate(scheduleDate.toISOString().split('T')[0]);
+        setTime(scheduleDate.toTimeString().slice(0, 5));
+        setSeasonNumber(existingSchedule.season_number?.toString() || '1');
+        setEpisodeNumber(existingSchedule.episode_number?.toString() || '1');
+        setSessionDuration(existingSchedule.session_duration || 30);
+        setDevice(existingSchedule.device || media?.device || 'TV');
+        setAudioFormat(existingSchedule.audio_format || 'Stereo');
+        setVideoFormat(existingSchedule.video_format || 'HD');
+      } else if (media?.type === 'book') {
+        setSessionDuration(30);
+        setDevice('E-Reader');
+        setDate('');
+        setTime('');
+      } else if (media?.type === 'series') {
+        // Find next unwatched episode based on completed + scheduled
+        const allSchedules = await base44.entities.WatchSchedule.filter({ media_id: media.id });
+        const watchedEpisodes = allSchedules.filter(s => s.status === 'completed');
+        const scheduledEpisodes = allSchedules.filter(s => s.status !== 'completed');
+
+        let foundNext = false;
+
+        // Find next episode by checking each season
+        for (let s = 1; s <= (media.seasons_count || 0); s++) {
+          const episodesInSeason = media.episodes_per_season?.[s - 1] || 0;
+          for (let e = 1; e <= episodesInSeason; e++) {
+            const isWatched = watchedEpisodes.some(ep => ep.season_number === s && ep.episode_number === e);
+            const isScheduled = scheduledEpisodes.some(ep => ep.season_number === s && ep.episode_number === e);
+
+            if (!isWatched && !isScheduled) {
+              setSeasonNumber(s.toString());
+              setEpisodeNumber(e.toString());
+              foundNext = true;
+              break;
+            }
           }
+          if (foundNext) break;
         }
-        if (foundNext) break;
-      }
-      
-      if (!foundNext) {
-        setSeasonNumber('1');
-        setEpisodeNumber('1');
-      }
-      setDate('');
-      setTime('');
-    } else {
+
+        if (!foundNext) {
+          setSeasonNumber('1');
+          setEpisodeNumber('1');
+        }
+        setDate('');
+        setTime('');
+      } else {
         setDate('');
         setTime('');
         setSeasonNumber('1');
         setEpisodeNumber('1');
       }
     };
-    
+
     initializeSchedule();
-    
+
     // Fetch all users for viewer selection
     const fetchUsers = async () => {
       try {
@@ -149,7 +149,7 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
         console.error('Failed to fetch users:', error);
       }
     };
-    
+
     if (open) fetchUsers();
   }, [open, existingSchedule, media]);
 
@@ -165,7 +165,7 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
       try {
         const scheduledDateTime = new Date(`${date}T${time}`);
         const hour = scheduledDateTime.getHours();
-        
+
         // Calculate runtime for conflict detection
         let runtime = media.runtime_minutes;
         if (media.type === 'series' && seasonNumber && episodeNumber) {
@@ -174,13 +174,13 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
         } else if (media.type === 'book') {
           runtime = sessionDuration;
         }
-        
+
         const endTime = new Date(scheduledDateTime.getTime() + runtime * 60000);
-        
+
         // Generate AI scheduling suggestion
         const genreLower = media.genre?.join(', ').toLowerCase() || '';
         let suggestion = null;
-        
+
         if ((genreLower.includes('horror') || genreLower.includes('thriller')) && hour >= 22) {
           suggestion = { type: 'warning', message: 'Late night horror? Perfect for maximum scares!' };
         } else if ((genreLower.includes('horror') || genreLower.includes('thriller')) && hour < 12) {
@@ -194,7 +194,7 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
         } else if (media.runtime_minutes > 150 && hour >= 22) {
           suggestion = { type: 'warning', message: 'Long movie scheduled late - make sure you have time!' };
         }
-        
+
         setAiSuggestion(suggestion);
 
         // Get all schedules for conflict detection
@@ -208,7 +208,7 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
         const conflictList = [];
         allSchedules.forEach((schedule) => {
           if (existingSchedule && schedule.id === existingSchedule.id) return;
-          
+
           const scheduleMedia = mediaMap[schedule.media_id];
           if (!scheduleMedia) return;
 
@@ -246,9 +246,9 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
-    
+
     setLoading(true);
-    
+
     try {
       const scheduledDateTime = new Date(`${date}T${time}`).toISOString();
       const seasonNum = media.type === 'series' ? parseInt(seasonNumber) : undefined;
@@ -266,8 +266,8 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
 
       await executeAction(existingSchedule ? 'Updating Schedule' : 'Scheduling', async () => {
         const result = await onSchedule(
-          media.id, 
-          scheduledDateTime, 
+          media.id,
+          scheduledDateTime,
           seasonNum,
           episodeNum,
           existingSchedule?.id,
@@ -278,7 +278,7 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
           selectedSeats.length > 0 ? selectedSeats : undefined,
           viewersData.length > 0 ? viewersData : undefined
         );
-        
+
         if (result !== true) {
           throw new Error('Failed to schedule');
         }
@@ -286,7 +286,7 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
         successTitle: existingSchedule ? 'Schedule Updated' : 'Scheduled Successfully',
         successSubtitle: `${media.title} has been ${existingSchedule ? 'rescheduled' : 'scheduled'}`
       });
-      
+
       onClose();
     } finally {
       setLoading(false);
@@ -330,7 +330,7 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
   const seatLayout = getSeatLayout();
 
   const toggleSeat = (seat) => {
-    setSelectedSeats(prev => 
+    setSelectedSeats(prev =>
       prev.includes(seat) ? prev.filter(s => s !== seat) : [...prev, seat]
     );
   };
@@ -508,9 +508,9 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
                     <SelectItem value="Other" className="text-white text-sm">Other</SelectItem>
                   </>
                 ) : (
-                 devices.filter(d => d && d.trim()).map(d => (
-                   <SelectItem key={d} value={d} className="text-white text-sm">{d}</SelectItem>
-                 ))
+                  devices.filter(d => d && d.trim()).map(d => (
+                    <SelectItem key={d} value={d} className="text-white text-sm">{d}</SelectItem>
+                  ))
                 )}
               </SelectContent>
             </Select>
@@ -557,15 +557,15 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
 
           {/* Seat Selection & Watch/Reading Party Options */}
           <div className="pt-2 border-t border-zinc-800">
-              <Button
-                type="button"
-                onClick={() => setShowSeatSelection(!showSeatSelection)}
-                className="w-full bg-gradient-to-r from-purple-500/20 to-emerald-500/20 hover:from-purple-500/30 hover:to-emerald-500/30 text-white border border-purple-500/50 h-9 text-xs sm:text-sm"
-              >
-                <seatLayout.icon className="w-3 sm:w-4 h-3 sm:h-4 mr-2" />
-                {showSeatSelection ? `Hide ${media.type === 'book' ? 'Reading' : 'Watch'} Party Options` : `👥 ${media.type === 'book' ? 'Reading' : 'Watch'} Party & Seats (Optional)`}
-              </Button>
-            </div>
+            <Button
+              type="button"
+              onClick={() => setShowSeatSelection(!showSeatSelection)}
+              className="w-full bg-gradient-to-r from-purple-500/20 to-emerald-500/20 hover:from-purple-500/30 hover:to-emerald-500/30 text-white border border-purple-500/50 h-9 text-xs sm:text-sm"
+            >
+              <seatLayout.icon className="w-3 sm:w-4 h-3 sm:h-4 mr-2" />
+              {showSeatSelection ? `Hide ${media.type === 'book' ? 'Reading' : 'Viewing'} Options` : `👥 ${media.type === 'book' ? 'Reading' : 'Viewing'} Options & Seats (Optional)`}
+            </Button>
+          </div>
 
           {/* Seat Selection UI */}
           <AnimatePresence>
@@ -582,7 +582,7 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
                     <seatLayout.icon className="w-4 sm:w-5 h-4 sm:h-5 text-purple-400" />
                     <Label className="text-white text-xs sm:text-sm font-semibold">{seatLayout.label}</Label>
                   </div>
-                  
+
                   {/* Seats Display */}
                   <div className={`flex ${seatLayout.seats.length === 1 ? 'justify-center' : 'justify-around'} gap-2 sm:gap-3`}>
                     {seatLayout.seats.map((seat) => (
@@ -595,8 +595,8 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
                         className={`
                           relative flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-lg
                           transition-all duration-300 border-2
-                          ${selectedSeats.includes(seat) 
-                            ? 'bg-purple-500 border-purple-400 shadow-lg shadow-purple-500/50' 
+                          ${selectedSeats.includes(seat)
+                            ? 'bg-purple-500 border-purple-400 shadow-lg shadow-purple-500/50'
                             : 'bg-zinc-700 border-zinc-600 hover:border-purple-500/50'}
                         `}
                       >
@@ -635,7 +635,7 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
                       <Users className="w-4 sm:w-5 h-4 sm:h-5 text-amber-400" />
                       <Label className="text-white text-xs sm:text-sm font-semibold">Add Viewers (Optional)</Label>
                     </div>
-                    
+
                     <div className="space-y-1.5 sm:space-y-2 max-h-28 sm:max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-700">
                       {allUsers.map((user) => (
                         <motion.button
@@ -715,19 +715,17 @@ export default function ScheduleModal({ open, onClose, media, onSchedule, existi
 
           {/* AI Scheduling Assistant */}
           {aiSuggestion && (
-            <div className={`rounded-lg p-3 sm:p-4 border-2 ${
-              aiSuggestion.type === 'warning' ? 'bg-orange-500/10 border-orange-500' :
-              aiSuggestion.type === 'info' ? 'bg-blue-500/10 border-blue-500' :
-              'bg-emerald-500/10 border-emerald-500'
-            }`}>
+            <div className={`rounded-lg p-3 sm:p-4 border-2 ${aiSuggestion.type === 'warning' ? 'bg-orange-500/10 border-orange-500' :
+                aiSuggestion.type === 'info' ? 'bg-blue-500/10 border-blue-500' :
+                  'bg-emerald-500/10 border-emerald-500'
+              }`}>
               <div className="flex items-start gap-2 sm:gap-3">
                 <Sparkles className="w-4 sm:w-6 h-4 sm:h-6 text-purple-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <h4 className={`font-bold mb-1 text-xs sm:text-sm ${
-                    aiSuggestion.type === 'warning' ? 'text-orange-400' :
-                    aiSuggestion.type === 'info' ? 'text-blue-400' :
-                    'text-emerald-400'
-                  }`}>AI Assistant</h4>
+                  <h4 className={`font-bold mb-1 text-xs sm:text-sm ${aiSuggestion.type === 'warning' ? 'text-orange-400' :
+                      aiSuggestion.type === 'info' ? 'text-blue-400' :
+                        'text-emerald-400'
+                    }`}>AI Assistant</h4>
                   <p className="text-xs sm:text-sm text-white">{aiSuggestion.message}</p>
                 </div>
               </div>

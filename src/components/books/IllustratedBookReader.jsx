@@ -10,6 +10,7 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { bookCache } from "../pwa/BookCache";
 import { useOffline } from "../pwa/OfflineManager";
+import { IllustrationAgent } from "@/agents/IllustrationAgent";
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -130,51 +131,24 @@ export default function IllustratedBookReader({ open, onClose, pdfUrl, bookTitle
       setPageIllustrations(updatedIllustrations);
       await base44.entities.Media.update(mediaId, { page_illustrations: updatedIllustrations });
 
-      // Extract text from PDF page (simplified - in real implementation, use pdfjs text extraction)
-      const pageText = `Page ${targetPageNumber} of ${bookTitle}`;
-
-      // Generate illustration prompt using LLM
-      const promptResponse = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are analyzing a page from a book titled "${bookTitle}". Based on this page content, create a concise illustration prompt for a vintage book-style illustration.
-
-The prompt should:
-- Describe the setting, mood, and key visual elements
-- Use classic book illustration style (black and white sketch, ink drawing, or sepia tone)
-- Avoid character names unless essential
-- Focus on atmosphere and key action
-- Be suitable for 19th-century literature illustration style
-
-Page content preview: "${pageText}"
-
-Respond with ONLY the illustration prompt, nothing else.`,
-        add_context_from_internet: false
-      });
-
-      const illustrationPrompt = promptResponse;
-
-      // Generate the illustration
-      const imageResponse = await base44.integrations.Core.GenerateImage({
-        prompt: `${illustrationPrompt}. Style: Vintage book illustration, black and white pencil sketch or ink drawing, classic literature etching style, soft shading, no text in image, 19th century aesthetic.`
-      });
+      // Use the Agent to do the work
+      const result = await IllustrationAgent.generateValues(bookTitle, targetPageNumber);
 
       // Update with successful generation
       const finalIllustrations = [...pageIllustrations];
       const finalIndex = finalIllustrations.findIndex(p => p.pageNumber === targetPageNumber);
 
+      const newRecord = {
+        pageNumber: targetPageNumber,
+        illustrationUrl: result.url,
+        illustrationPrompt: result.prompt,
+        illustrationStatus: 'ready'
+      };
+
       if (finalIndex >= 0) {
-        finalIllustrations[finalIndex] = {
-          pageNumber: targetPageNumber,
-          illustrationUrl: imageResponse.url,
-          illustrationPrompt: illustrationPrompt,
-          illustrationStatus: 'ready'
-        };
+        finalIllustrations[finalIndex] = newRecord;
       } else {
-        finalIllustrations.push({
-          pageNumber: targetPageNumber,
-          illustrationUrl: imageResponse.url,
-          illustrationPrompt: illustrationPrompt,
-          illustrationStatus: 'ready'
-        });
+        finalIllustrations.push(newRecord);
       }
 
       setPageIllustrations(finalIllustrations);

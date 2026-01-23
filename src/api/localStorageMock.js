@@ -288,8 +288,6 @@ const auth = {
     }
 };
 
-import { localFileStorage } from './localFileStorage';
-
 // ... (keep existing code)
 
 // Mock integrations
@@ -300,16 +298,8 @@ const integrations = {
             return { success: true };
         },
         UploadFile: async ({ file }) => {
-            console.log('[LocalMock] File upload starting (IndexedDB):', file.name);
-            try {
-                const fileId = await localFileStorage.saveFile(file);
-                const localUrl = `local-file://${fileId}`;
-                console.log('[LocalMock] File saved to IndexedDB:', localUrl);
-                return { file_url: localUrl };
-            } catch (error) {
-                console.error('[LocalMock] Failed to save file:', error);
-                throw new Error("Failed to save file locally. Storage might be full.");
-            }
+            console.log('[LocalMock] File upload simulated:', file.name);
+            return { file_url: 'https://via.placeholder.com/150?text=Uploaded+File' };
         }
     }
 };

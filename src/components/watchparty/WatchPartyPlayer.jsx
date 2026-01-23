@@ -26,11 +26,11 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
 
   useEffect(() => {
     if (!open) return;
-
+    
     const init = async () => {
       const user = await base44.auth.me();
       setCurrentUser(user);
-
+      
       // Join party if not already in participants
       if (!party.participants?.some(p => p.user_id === user.id)) {
         const updatedParticipants = [...(party.participants || []), {
@@ -40,12 +40,12 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
           avatar: user.profile_picture || '',
           joined_at: new Date().toISOString()
         }];
-
+        
         await base44.entities.WatchParty.update(party.id, {
           participants: updatedParticipants,
           status: 'live'
         });
-
+        
         // System message
         await base44.entities.ChatMessage.create({
           party_id: party.id,
@@ -57,7 +57,7 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
         });
       }
     };
-
+    
     init();
   }, [open, party]);
 
@@ -74,29 +74,29 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
         const updated = await base44.entities.WatchParty.filter({ id: party.id });
         if (updated.length > 0) {
           const partyData = updated[0];
-
+          
           // Only update if data actually changed
           const dataChanged = JSON.stringify(lastPartyData) !== JSON.stringify(partyData);
           if (dataChanged) {
             setParticipants(partyData.participants || []);
             setJoinRequests(partyData.join_requests || []);
-
+            
             // Sync playback if not host
             if (!isHost) {
               setCurrentTime(partyData.current_time || 0);
               setIsPlaying(partyData.is_playing || false);
             }
-
+            
             lastPartyData = partyData;
           }
         }
-
+        
         // Check for new messages
         const msgs = await base44.entities.ChatMessage.filter(
           { party_id: party.id },
           'created_date'
         );
-
+        
         if (msgs.length !== lastMessagesCount) {
           setMessages(msgs);
           lastMessagesCount = msgs.length;
@@ -104,7 +104,7 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
       } catch (error) {
         console.error('Sync error:', error);
       }
-
+      
       // Schedule next poll
       syncIntervalRef.current = setTimeout(syncData, pollInterval);
     };
@@ -163,7 +163,7 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
     setIsPlaying(newState);
     if (isHost) {
       await syncPlayback(currentTime, newState);
-
+      
       // System message
       await base44.entities.ChatMessage.create({
         party_id: party.id,
@@ -190,7 +190,7 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
         message_type: 'chat',
         timestamp: new Date().toISOString()
       });
-
+      
       setNewMessage('');
     } catch (error) {
       const { showDynamicIslandNotification } = require('../pwa/DynamicIsland');
@@ -252,7 +252,7 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
       await base44.entities.WatchParty.update(party.id, {
         participants: updatedParticipants
       });
-
+      
       await base44.entities.ChatMessage.create({
         party_id: party.id,
         user_email: 'system',
@@ -261,7 +261,7 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
         message_type: 'system',
         timestamp: new Date().toISOString()
       });
-
+      
       onClose();
     } catch (error) {
       console.error('Failed to leave:', error);
@@ -327,15 +327,15 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
               {/* Video Placeholder */}
               <div className="flex-1 relative bg-gradient-to-br from-zinc-900 to-black flex items-center justify-center overflow-hidden">
                 {media?.poster_url ? (
-                  <img
-                    src={media.poster_url}
+                  <img 
+                    src={media.poster_url} 
                     alt={media?.title || 'Media'}
                     className="max-h-full max-w-full object-contain opacity-30 blur-sm"
                   />
                 ) : (
                   <div className="text-6xl text-zinc-700">🎬</div>
                 )}
-
+                
                 {/* Play/Pause Overlay */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <motion.button
@@ -368,7 +368,7 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
                       S{String(party.season_number).padStart(2, '0')}E{String(party.episode_number).padStart(2, '0')}
                     </p>
                   )}
-
+                  
                   {/* Progress Bar */}
                   <div className="space-y-2">
                     <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
@@ -389,101 +389,101 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
 
             {/* Chat Sidebar - Always Visible */}
             <div className="w-96 bg-zinc-900 border-l border-zinc-800 flex flex-col">
-              {/* Join Requests (Host Only) */}
-              {isHost && joinRequests.length > 0 && (
-                <div className="p-4 border-b border-zinc-800 bg-amber-500/5">
-                  <h3 className="text-sm font-semibold text-amber-400 mb-3">Join Requests ({joinRequests.length})</h3>
-                  <div className="space-y-2">
-                    {joinRequests.map((request) => (
-                      <div key={request.user_id} className="flex items-center justify-between p-2 bg-zinc-800 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-purple-500 flex items-center justify-center text-xs font-bold">
-                            {request.name?.[0] || '?'}
+                  {/* Join Requests (Host Only) */}
+                  {isHost && joinRequests.length > 0 && (
+                    <div className="p-4 border-b border-zinc-800 bg-amber-500/5">
+                      <h3 className="text-sm font-semibold text-amber-400 mb-3">Join Requests ({joinRequests.length})</h3>
+                      <div className="space-y-2">
+                        {joinRequests.map((request) => (
+                          <div key={request.user_id} className="flex items-center justify-between p-2 bg-zinc-800 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-purple-500 flex items-center justify-center text-xs font-bold">
+                                {request.name[0]}
+                              </div>
+                              <span className="text-xs text-white">{request.name}</span>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button size="icon" onClick={() => handleApproveRequest(request)} className="h-6 w-6 bg-emerald-500 hover:bg-emerald-600">
+                                <CheckCircle className="w-3 h-3" />
+                              </Button>
+                              <Button size="icon" onClick={() => handleRejectRequest(request)} className="h-6 w-6 bg-red-500 hover:bg-red-600">
+                                <XCircle className="w-3 h-3" />
+                              </Button>
+                            </div>
                           </div>
-                          <span className="text-xs text-white">{request.name}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Participants */}
+                  <div className="p-4 border-b border-zinc-800">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-white">Participants ({participants.length})</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {participants.map((p) => (
+                        <div
+                          key={p.user_id}
+                          className="flex items-center gap-2 px-2 py-1 bg-zinc-800 rounded-full"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-emerald-500 flex items-center justify-center text-xs font-bold">
+                            {p.name[0]}
+                          </div>
+                          <span className="text-xs text-white">
+                            {p.name.split(' ')[0]}
+                            {p.email === party.host_email && ' 👑'}
+                          </span>
                         </div>
-                        <div className="flex gap-1">
-                          <Button size="icon" onClick={() => handleApproveRequest(request)} className="h-6 w-6 bg-emerald-500 hover:bg-emerald-600">
-                            <CheckCircle className="w-3 h-3" />
-                          </Button>
-                          <Button size="icon" onClick={() => handleRejectRequest(request)} className="h-6 w-6 bg-red-500 hover:bg-red-600">
-                            <XCircle className="w-3 h-3" />
-                          </Button>
-                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Messages */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    {messages.map((msg) => (
+                      <div key={msg.id} className={msg.message_type === 'system' ? 'text-center' : ''}>
+                        {msg.message_type === 'system' ? (
+                          <span className="text-xs text-zinc-500">{msg.message}</span>
+                        ) : (
+                          <div className="flex gap-2">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-purple-500 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                              {msg.user_name[0]}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-baseline gap-2 mb-1">
+                                <span className="text-sm font-semibold text-white">{msg.user_name}</span>
+                                <span className="text-xs text-zinc-500">
+                                  {new Date(msg.created_date).toLocaleTimeString('en-US', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                  })}
+                                </span>
+                              </div>
+                              <p className="text-sm text-zinc-300">{msg.message}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
+                    <div ref={chatEndRef} />
                   </div>
-                </div>
-              )}
 
-              {/* Participants */}
-              <div className="p-4 border-b border-zinc-800">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-white">Participants ({participants.length})</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {participants.map((p) => (
-                    <div
-                      key={p.user_id}
-                      className="flex items-center gap-2 px-2 py-1 bg-zinc-800 rounded-full"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-emerald-500 flex items-center justify-center text-xs font-bold">
-                        {p.name?.[0] || '?'}
-                      </div>
-                      <span className="text-xs text-white">
-                        {p.name.split(' ')[0]}
-                        {p.email === party.host_email && ' 👑'}
-                      </span>
+                  {/* Message Input */}
+                  <form onSubmit={sendMessage} className="p-4 border-t border-zinc-800">
+                    <div className="flex gap-2">
+                      <Input
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Type a message..."
+                        className="bg-zinc-800 border-zinc-700 text-white"
+                      />
+                      <Button type="submit" size="icon" className="bg-amber-500 hover:bg-amber-600 text-black">
+                        <Send className="w-4 h-4" />
+                      </Button>
                     </div>
-                  ))}
+                  </form>
                 </div>
-              </div>
-
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={msg.message_type === 'system' ? 'text-center' : ''}>
-                    {msg.message_type === 'system' ? (
-                      <span className="text-xs text-zinc-500">{msg.message}</span>
-                    ) : (
-                      <div className="flex gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-purple-500 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                          {msg.user_name[0]}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-baseline gap-2 mb-1">
-                            <span className="text-sm font-semibold text-white">{msg.user_name}</span>
-                            <span className="text-xs text-zinc-500">
-                              {new Date(msg.created_date).toLocaleTimeString('en-US', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                          <p className="text-sm text-zinc-300">{msg.message}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                <div ref={chatEndRef} />
-              </div>
-
-              {/* Message Input */}
-              <form onSubmit={sendMessage} className="p-4 border-t border-zinc-800">
-                <div className="flex gap-2">
-                  <Input
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className="bg-zinc-800 border-zinc-700 text-white"
-                  />
-                  <Button type="submit" size="icon" className="bg-amber-500 hover:bg-amber-600 text-black">
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </form>
-            </div>
           </div>
         </div>
       </DialogContent>

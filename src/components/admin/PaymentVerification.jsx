@@ -111,6 +111,53 @@ export default function PaymentVerification() {
         // Don't fail the whole approval if invoice fails
       }
 
+      // Schedule Welcome Email (3 minutes later)
+      try {
+        // Find welcome template
+        const templates = await base44.entities.EmailTemplate.list();
+        // Look for template with 'welcome' in name or slug, case insensitive
+        const welcomeTemplate = templates.find(t =>
+          t.name.toLowerCase().includes('welcome') ||
+          t.slug?.toLowerCase().includes('welcome')
+        );
+
+        if (welcomeTemplate) {
+          // Schedule for 3 minutes later
+          const scheduledDate = new Date();
+          scheduledDate.setMinutes(scheduledDate.getMinutes() + 3);
+
+          // Prepare email body with variables replaced
+          let htmlBody = welcomeTemplate.html_body || '';
+          let subject = welcomeTemplate.subject || '';
+
+          // Replace variables
+          const variables = {
+            user_name: paymentRequest.user_email.split('@')[0],
+            plan_name: plan.name
+          };
+
+          Object.keys(variables).forEach(variable => {
+            const regex = new RegExp(`{{${variable}}}`, 'g');
+            htmlBody = htmlBody.replace(regex, variables[variable]);
+            subject = subject.replace(regex, variables[variable]);
+          });
+
+          // Send email with schedule via Resend native scheduling
+          await base44.integrations.Core.SendEmail({
+            to: paymentRequest.user_email,
+            subject: subject,
+            body: htmlBody,
+            scheduledAt: scheduledDate.toISOString()
+          });
+
+          console.log('Scheduled welcome email for 3 minutes later via Resend');
+        } else {
+          console.warn('Welcome email template not found');
+        }
+      } catch (welcomeError) {
+        console.error('Failed to schedule welcome email:', welcomeError);
+      }
+
       // Update UPI Account Usage (Smart Rotation)
       if (paymentRequest.admin_upi_id && paymentRequest.amount) {
         try {

@@ -230,12 +230,12 @@ const auth = {
 // Integrations - Email via Resend, File Upload via Supabase Storage
 const integrations = {
     Core: {
-        SendEmail: async ({ to, subject, body }) => {
+        SendEmail: async ({ to, subject, body, scheduledAt }) => {
             try {
                 const response = await fetch('/api/send-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ to, subject, body })
+                    body: JSON.stringify({ to, subject, body, scheduledAt })
                 });
                 const result = await response.json();
                 if (!response.ok) {

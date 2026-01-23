@@ -13,7 +13,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { to, subject, body } = req.body;
+    const { to, subject, body, scheduledAt } = req.body;
 
     if (!to || !subject) {
         return res.status(400).json({ error: 'Missing required fields: to, subject' });
@@ -31,18 +31,24 @@ export default async function handler(req, res) {
     }
 
     try {
+        const payload = {
+            from: RESEND_FROM_EMAIL,
+            to: [to],
+            subject: subject,
+            html: body || '<p>No content</p>'
+        };
+
+        if (scheduledAt) {
+            payload.scheduled_at = scheduledAt;
+        }
+
         const response = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${RESEND_API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                from: RESEND_FROM_EMAIL,
-                to: [to],
-                subject: subject,
-                html: body || '<p>No content</p>'
-            })
+            body: JSON.stringify(payload)
         });
 
         const data = await response.json();

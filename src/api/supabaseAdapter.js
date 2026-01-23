@@ -227,11 +227,27 @@ const auth = {
     }
 };
 
-// Integrations Mock (Supabase doesn't natively do LLM/Email out of box without Edge Functions)
-// We will keep mocks for heavy logic, or implement basic File Upload via Storage
+// Integrations - Email via Resend, File Upload via Supabase Storage
 const integrations = {
     Core: {
-        SendEmail: async () => ({ success: true }),
+        SendEmail: async ({ to, subject, body }) => {
+            try {
+                const response = await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to, subject, body })
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    console.error('Email send failed:', result.error);
+                    throw new Error(result.error || 'Failed to send email');
+                }
+                return result;
+            } catch (error) {
+                console.error('SendEmail error:', error);
+                throw error;
+            }
+        },
         UploadFile: async ({ file }) => {
             // Real Supabase Storage Upload
             // Assumes 'uploads' bucket exists

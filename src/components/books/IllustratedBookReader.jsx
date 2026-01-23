@@ -13,7 +13,10 @@ import { useOffline } from "../pwa/OfflineManager";
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 export default function IllustratedBookReader({ open, onClose, pdfUrl, bookTitle, initialPage = 1, totalPages, mediaId, media }) {
   const [numPages, setNumPages] = useState(null);
@@ -289,8 +292,8 @@ Respond with ONLY the illustration prompt, nothing else.`,
                 onClick={isCached ? handleRemoveOffline : handleDownloadForOffline}
                 disabled={isDownloading}
                 className={`h-7 sm:h-8 px-2 sm:px-3 text-xs ${isCached
-                    ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/50'
-                    : 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/50'
+                  ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/50'
+                  : 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/50'
                   }`}
               >
                 {isDownloading ? (
@@ -404,6 +407,7 @@ Respond with ONLY the illustration prompt, nothing else.`,
                   <Document
                     file={pdfUrl}
                     onLoadSuccess={onDocumentLoadSuccess}
+                    onLoadError={(error) => console.error('Error loading PDF:', error)}
                     loading={<div className="text-zinc-700 text-center py-10">Loading page...</div>}
                     error={<div className="text-red-600 text-center py-10">Failed to load PDF</div>}
                   >
@@ -466,6 +470,7 @@ Respond with ONLY the illustration prompt, nothing else.`,
                   <Document
                     file={pdfUrl}
                     onLoadSuccess={onDocumentLoadSuccess}
+                    onLoadError={(error) => console.error('Error loading PDF:', error)}
                     loading={<div className="text-zinc-700 text-center py-10">Loading page...</div>}
                     error={<div className="text-red-600 text-center py-10">Failed to load PDF</div>}
                   >

@@ -19,14 +19,14 @@ export default function Footer({ lastLibraryUpdate }) {
             )}
           </div>
           <div className="flex gap-3 sm:gap-4 text-[11px] sm:text-xs">
-            <a href="https://www.termsfeed.com/live/d7b428c4-2d31-4a94-8a5e-2dab504d703f" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white transition-colors">
-              Terms
-            </a>
-            <a href="https://www.termsfeed.com/live/ba636b6f-a26f-42e0-8732-f6687e8e195f" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white transition-colors">
-              Privacy
-            </a>
             <a href="https://www.termsfeed.com/live/46599698-55e1-4948-89e9-cf77b55ce435" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white transition-colors cursor-pointer">
               Disclaimer
+            </a>
+            <a href="https://www.termsfeed.com/live/d7b428c4-2d31-4a94-8a5e-2dab504d703f" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white transition-colors">
+              Terms & Conditions
+            </a>
+            <a href="https://www.termsfeed.com/live/ba636b6f-a26f-42e0-8732-f6687e8e195f" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white transition-colors">
+              Privacy Policy
             </a>
           </div>
         </div>

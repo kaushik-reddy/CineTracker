@@ -20,6 +20,7 @@ export default async function handler(req, res) {
     }
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
+    const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'CineTracker <onboarding@resend.dev>';
 
     if (!RESEND_API_KEY) {
         console.error('RESEND_API_KEY not configured');
@@ -37,7 +38,7 @@ export default async function handler(req, res) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                from: 'CineTracker <onboarding@resend.dev>', // Use your verified domain later
+                from: RESEND_FROM_EMAIL,
                 to: [to],
                 subject: subject,
                 html: body || '<p>No content</p>'

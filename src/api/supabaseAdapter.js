@@ -148,7 +148,7 @@ const entityNames = [
     'Subscription', 'PlatformSubscription', 'Plan', 'Payment', 'PaymentRequest', 'Invoice',
     'ConfigurableOption', 'AppConfig', 'UPIConfig', 'Logo', 'Option', 'Universe',
     'AdminNotification', 'ScheduledNotification', 'Notification', 'EmailTemplate',
-    'UsageAnalytics', 'Request', 'Cancellation', 'WeeklyRelease'
+    'UsageAnalytics', 'Request', 'Cancellation', 'WeeklyRelease', 'NotificationHistory'
 ];
 
 const entities = {};

@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { useAction } from "@/components/feedback/useAction";
+import { toast } from "@/components/ui/use-toast";
 
 import MediaCard from "@/components/media/MediaCard";
 import MediaForm from "@/components/media/MediaForm";
@@ -1652,7 +1653,7 @@ export default function Home() {
                     </div>
                     <div className="flex gap-2 flex-wrap">
                       <Button
-                        onClick={() => setView('watchparty')}
+                        onClick={() => toast({ title: "Coming Soon", description: "Watch Parties are coming soon!", duration: 3000 })}
                         className="bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-xl text-white text-xs sm:text-sm h-9"
                       >
                         <Users className="w-4 h-4 mr-2" />

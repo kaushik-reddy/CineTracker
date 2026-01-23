@@ -242,7 +242,7 @@ const integrations = {
 
             if (error) {
                 console.error("Upload failed", error);
-                return { file_url: "https://via.placeholder.com/150?text=Upload+Fail" };
+                throw error;
             }
 
             const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(fileName);

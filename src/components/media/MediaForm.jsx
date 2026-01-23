@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,6 +44,7 @@ const baseLanguages = [
 ];
 
 export default function MediaForm({ open, onClose, onSubmit, initialData }) {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     title: '',
     type: 'movie',
@@ -905,6 +907,12 @@ CRITICAL: Use Google Books' official thumbnail URL structure with zoom=2 paramet
                         setLoading(false);
                       } catch (error) {
                         console.error('PDF upload/processing failed:', error);
+                        toast({
+                          variant: "destructive",
+                          title: "Upload Failed",
+                          description: error.message || "Failed to upload PDF. Please check your connection and storage configuration.",
+                          duration: 5000
+                        });
                         setLoading(false);
                       }
                     }

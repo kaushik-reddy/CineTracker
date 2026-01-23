@@ -1,9 +1,9 @@
-import { generateIllustrationPrompt } from "@/api/geminiClient";
+import { generateIllustrationPrompt, generateImage } from "@/api/openaiClient";
 
 /**
  * Illustration Agent
  * Handles the "creative" work of analyzing book text and generating illustrations.
- * Uses Gemini (Text) + Pollinations.ai (Image).
+ * Uses OpenAI (GPT-4o + DALL-E 3).
  */
 export const IllustrationAgent = {
     /**
@@ -16,34 +16,32 @@ export const IllustrationAgent = {
     generateValues: async (bookTitle, pageNumber, pageText = "") => {
         console.log(`[IllustrationAgent] Starting work for ${bookTitle} page ${pageNumber}`);
 
-        // 1. Generate Creative Prompt using Gemini
+        // 1. Generate Creative Prompt using GPT-4o
         let illustrationPrompt;
         try {
             illustrationPrompt = await generateIllustrationPrompt(bookTitle, pageNumber, pageText);
         } catch (error) {
-            console.error("Gemini Prompt Generation failed, falling back to simple prompt.", error);
+            console.error("OpenAI Prompt Generation failed, falling back to simple prompt.", error);
             illustrationPrompt = `Vintage etching of a scene from ${bookTitle}, page ${pageNumber}. Classic book illustration style.`;
         }
 
         console.log(`[IllustrationAgent] Generated Prompt:`, illustrationPrompt);
 
-        // 2. Generate Image using Pollinations.ai (Free, No Key)
-        // We ensure the style is baked into the final image prompt
-        const finalImagePrompt = `${illustrationPrompt} style: vintage etching, ink drawing, woodcut, black and white, high detailed, masterpiece`;
-        const encodedPrompt = encodeURIComponent(finalImagePrompt);
+        // 2. Generate Image using DALL-E 3
+        try {
+            // We ensure the style is baked into the final image prompt
+            const finalImagePrompt = `${illustrationPrompt}. Style: vintage etching, ink drawing, woodcut, black and white, highly detailed, masterpiece.`;
 
-        // Add random seed to ensure unique images if retried
-        const seed = Math.floor(Math.random() * 1000000);
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=1200&model=flux&seed=${seed}&nologo=true`;
+            const result = await generateImage(finalImagePrompt);
+            console.log(`[IllustrationAgent] Generated Image URL:`, result.url);
 
-        console.log(`[IllustrationAgent] Generated Image URL:`, imageUrl);
-
-        // Simulate a short wait to make it feel like "work" and ensure URL is ready (optional, but good UX)
-        // Pollinations is instant, so we don't strictly need to wait, but returning immediately is fine.
-
-        return {
-            url: imageUrl,
-            prompt: illustrationPrompt
-        };
+            return {
+                url: result.url,
+                prompt: illustrationPrompt
+            };
+        } catch (error) {
+            console.error("OpenAI Image Generation failed:", error);
+            throw error; // Let the caller handle the failure (e.g. show error toast)
+        }
     }
 };

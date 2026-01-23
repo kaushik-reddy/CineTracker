@@ -237,7 +237,7 @@ const integrations = {
             // Assumes 'uploads' bucket exists
             const fileName = `${Date.now()}_${file.name}`;
             const { data, error } = await supabase.storage
-                .from('uploads')
+                .from('Uploads')
                 .upload(fileName, file);
 
             if (error) {
@@ -245,7 +245,7 @@ const integrations = {
                 throw error;
             }
 
-            const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(fileName);
+            const { data: { publicUrl } } = supabase.storage.from('Uploads').getPublicUrl(fileName);
             return { file_url: publicUrl };
         }
     }

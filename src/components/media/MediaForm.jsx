@@ -76,6 +76,7 @@ export default function MediaForm({ open, onClose, onSubmit, initialData }) {
   const [autoFetching, setAutoFetching] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState(null);
+  const [showAutoFillComingSoon, setShowAutoFillComingSoon] = useState(false);
   const [universes, setUniverses] = useState([]);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitModalData, setLimitModalData] = useState(null);
@@ -189,40 +190,9 @@ export default function MediaForm({ open, onClose, onSubmit, initialData }) {
     }
   }, [initialData]);
 
-  // Auto-Fetch Handler
-  const handleAutoFetch = async () => {
-    if (!formData.title) {
-      toast({ title: "Title Required", description: "Please enter a title to search.", variant: "destructive" });
-      return;
-    }
-
-    setLoading(true);
-    setAutoFetching(true);
-    try {
-      const details = await fetchMediaDetails(formData.title, formData.type, formData.language || 'English');
-
-      // Post-process fetched data
-      const processed = { ...details };
-      // Ensure type matches form (API should handle this but safety check)
-      if (details.type && details.type !== formData.type) {
-        // Log warning but proceed with matched data
-        console.warn(`Fetched type ${details.type} differs from form type ${formData.type}`);
-      }
-
-      setPreviewData(processed);
-      setShowPreview(true);
-      toast({ title: "Details Found!", description: "Review the data before applying." });
-    } catch (error) {
-      console.error("Auto-fetch failed:", error);
-      toast({
-        title: "Auto-Fetch Failed",
-        description: error.message || "Could not find details for this title.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-      setAutoFetching(false);
-    }
+  // Auto-Fetch Handler (Coming Soon)
+  const handleAutoFetch = () => {
+    setShowAutoFillComingSoon(true);
   };
 
   // Helper to apply preview data
@@ -966,6 +936,35 @@ export default function MediaForm({ open, onClose, onSubmit, initialData }) {
           limitType={limitModalData.limitType}
         />
       )}
+
+      {/* Auto-Fill Coming Soon Modal */}
+      <Dialog open={showAutoFillComingSoon} onOpenChange={setShowAutoFillComingSoon}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Sparkles className="w-6 h-6 text-purple-500" />
+              Auto-Fill Details
+            </DialogTitle>
+            <p className="text-zinc-400 pt-2 text-base">
+              This feature is currently under development. Automatically fetch movie, series, and book details coming soon!
+            </p>
+          </DialogHeader>
+          <div className="py-4 flex justify-center">
+            <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center animate-pulse">
+              <Sparkles className="w-10 h-10 text-zinc-600" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              onClick={() => setShowAutoFillComingSoon(false)}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+            >
+              Understood, can't wait!
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
     </>
   );

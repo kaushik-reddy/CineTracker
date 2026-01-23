@@ -29,6 +29,7 @@ function IllustratedBookReaderContent({ open, onClose, pdfUrl, bookTitle, initia
   const [isMobile, setIsMobile] = useState(false);
   const [isCached, setIsCached] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showIllustrationComingSoon, setShowIllustrationComingSoon] = useState(false);
   const { isOnline, addToQueue } = useOffline();
 
   useEffect(() => {
@@ -111,69 +112,7 @@ function IllustratedBookReaderContent({ open, onClose, pdfUrl, bookTitle, initia
   };
 
   const generatePageIllustration = async (targetPageNumber) => {
-    setGeneratingIllustration(true);
-
-    try {
-      // Update status to pending
-      const updatedIllustrations = [...pageIllustrations];
-      const existingIndex = updatedIllustrations.findIndex(p => p.pageNumber === targetPageNumber);
-
-      if (existingIndex >= 0) {
-        updatedIllustrations[existingIndex].illustrationStatus = 'pending';
-      } else {
-        updatedIllustrations.push({
-          pageNumber: targetPageNumber,
-          illustrationStatus: 'pending',
-          illustrationUrl: null,
-          illustrationPrompt: null
-        });
-      }
-
-      setPageIllustrations(updatedIllustrations);
-      await base44.entities.Media.update(mediaId, { page_illustrations: updatedIllustrations });
-
-      // Use the Agent to do the work
-      const result = await IllustrationAgent.generateValues(bookTitle, targetPageNumber);
-
-      // Update with successful generation
-      const finalIllustrations = [...pageIllustrations];
-      const finalIndex = finalIllustrations.findIndex(p => p.pageNumber === targetPageNumber);
-
-      const newRecord = {
-        pageNumber: targetPageNumber,
-        illustrationUrl: result.url,
-        illustrationPrompt: result.prompt,
-        illustrationStatus: 'ready'
-      };
-
-      if (finalIndex >= 0) {
-        finalIllustrations[finalIndex] = newRecord;
-      } else {
-        finalIllustrations.push(newRecord);
-      }
-
-      setPageIllustrations(finalIllustrations);
-      await base44.entities.Media.update(mediaId, { page_illustrations: finalIllustrations });
-
-      toast.success('Illustration generated!');
-    } catch (error) {
-      console.error('Failed to generate illustration:', error);
-
-      // Update status to failed
-      const failedIllustrations = [...pageIllustrations];
-      const failedIndex = failedIllustrations.findIndex(p => p.pageNumber === targetPageNumber);
-
-      if (failedIndex >= 0) {
-        failedIllustrations[failedIndex].illustrationStatus = 'failed';
-      }
-
-      setPageIllustrations(failedIllustrations);
-      await base44.entities.Media.update(mediaId, { page_illustrations: failedIllustrations });
-
-      toast.error('Failed to generate illustration');
-    } finally {
-      setGeneratingIllustration(false);
-    }
+    setShowIllustrationComingSoon(true);
   };
 
   const toggleIllustratedMode = async () => {
@@ -511,6 +450,34 @@ function IllustratedBookReaderContent({ open, onClose, pdfUrl, bookTitle, initia
           )}
         </div>
       </DialogContent>
+
+      {/* Illustration Coming Soon Modal */}
+      <Dialog open={showIllustrationComingSoon} onOpenChange={setShowIllustrationComingSoon}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Sparkles className="w-6 h-6 text-purple-500" />
+              AI Illustrated Mode
+            </DialogTitle>
+            <p className="text-zinc-400 pt-2 text-base">
+              This feature is currently under development. Experience AI-generated book illustrations tailored to your reading journey coming soon!
+            </p>
+          </DialogHeader>
+          <div className="py-4 flex justify-center">
+            <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center animate-pulse">
+              <Sparkles className="w-10 h-10 text-zinc-600" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              onClick={() => setShowIllustrationComingSoon(false)}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+            >
+              Understood, can't wait!
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

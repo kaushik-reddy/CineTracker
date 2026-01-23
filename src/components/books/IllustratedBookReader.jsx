@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, Image as ImageIcon, BookOpen, Loader2, Download, Cloud, CloudOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, Image as ImageIcon, BookOpen, Loader2, Download, Cloud, CloudOff, Sparkles } from "lucide-react";
 import { supabaseAdapter as base44 } from "@/api/supabaseAdapter";
 import { toast } from "sonner";
 import { bookCache } from "../pwa/BookCache";

@@ -14,4 +14,7 @@ export default defineConfig({
     react(),
   ],
   envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
+  define: {
+    '__BUILD_DATE__': JSON.stringify(new Date().toISOString()),
+  },
 });

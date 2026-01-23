@@ -2,8 +2,9 @@ import React from 'react';
 import { format } from 'date-fns';
 
 export default function Footer({ lastLibraryUpdate }) {
-  const websiteUpdated = new Date('2025-12-24');
-  
+  // Use build date injected by Vite, fallback to current date
+  const websiteUpdated = typeof __BUILD_DATE__ !== 'undefined' ? new Date(__BUILD_DATE__) : new Date();
+
   return (
     <footer className="w-full bg-zinc-950 border-t border-zinc-800/50 py-3 sm:py-4 backdrop-blur-sm mt-auto relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-4 md:px-6">

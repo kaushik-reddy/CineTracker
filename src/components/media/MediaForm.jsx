@@ -620,15 +620,27 @@ CRITICAL: Use Google Books' official thumbnail URL structure with zoom=2 paramet
 
             {/* Title & Year */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2 space-y-2">
-                <Label className="text-zinc-300">Title *</Label>
-                <Input
-                  value={formData.title}
-                  onChange={(e) => handleChange('title', e.target.value)}
-                  placeholder="Enter title"
-                  required
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-amber-500"
-                />
+              <div className="col-span-2 flex gap-2 items-end">
+                <div className="flex-1 space-y-2">
+                  <Label className="text-zinc-300">Title *</Label>
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => handleChange('title', e.target.value)}
+                    placeholder="Enter movie, series or book title"
+                    required
+                    className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-amber-500"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleAutoFetch}
+                  disabled={loading || !formData.title}
+                  className="bg-purple-600 hover:bg-purple-700 text-white mb-0"
+                  size="sm"
+                >
+                  {autoFetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1" />}
+                  {autoFetching ? 'Searching...' : 'Auto-Fill'}
+                </Button>
               </div>
               <div className="space-y-2">
                 <Label className="text-zinc-300">Year</Label>
@@ -1159,6 +1171,75 @@ CRITICAL: Use Google Books' official thumbnail URL structure with zoom=2 paramet
           limitType={limitModalData.limitType}
         />
       )}
+      {/* Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-400" />
+              Review Auto-Filled Details
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-xs text-zinc-500 uppercase">Title</p>
+                <p className="text-white">{previewData?.title}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-zinc-500 uppercase">Year / Rating</p>
+                <p className="text-white">{previewData?.year} • {previewData?.age_restriction}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-zinc-500 uppercase">Genre</p>
+                <div className="flex flex-wrap gap-1">
+                  {previewData?.genre?.map(g => (
+                    <Badge key={g} variant="outline" className="text-zinc-400 border-zinc-700">{g}</Badge>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-1">
+                {formData.type === 'book' ? (
+                  <>
+                    <p className="text-xs text-zinc-500 uppercase">Author / Pages</p>
+                    <p className="text-white">{previewData?.author} • {previewData?.total_pages}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs text-zinc-500 uppercase">Runtime / Seasons</p>
+                    <p className="text-white">
+                      {previewData?.runtime_minutes ? `${previewData.runtime_minutes}m` : ''}
+                      {previewData?.seasons_count ? `${previewData.seasons_count} Seasons` : ''}
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs text-zinc-500 uppercase">Description</p>
+              <p className="text-zinc-300 text-sm line-clamp-3">{previewData?.description}</p>
+            </div>
+
+            {previewData?.actors?.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs text-zinc-500 uppercase">Main Cast</p>
+                <p className="text-zinc-300 text-sm">{previewData.actors.join(', ')}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+            <Button variant="ghost" onClick={discardPreviewData} className="text-zinc-400 hover:text-white">
+              Discard
+            </Button>
+            <Button onClick={applyPreviewData} className="bg-purple-600 hover:bg-purple-700 text-white">
+              Apply Details
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

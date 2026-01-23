@@ -405,12 +405,23 @@ function IllustratedBookReaderContent({ open, onClose, pdfUrl, bookTitle, initia
                   minHeight: '600px'
                 }}>
                   {currentIllustration?.illustrationStatus === 'ready' && currentIllustration?.illustrationUrl ? (
-                    <img
-                      src={currentIllustration.illustrationUrl}
-                      alt={`Illustration for page ${pageNumber}`}
-                      className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
-                      style={{ filter: 'sepia(0.2)' }}
-                    />
+                    <div className="relative group w-full h-full flex items-center justify-center">
+                      <img
+                        src={currentIllustration.illustrationUrl}
+                        alt={`Illustration for page ${pageNumber}`}
+                        className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                        style={{ filter: 'sepia(0.2)' }}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => generatePageIllustration(pageNumber)}
+                        className="absolute bottom-4 right-4 bg-zinc-900/80 hover:bg-zinc-800 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Regenerate Illustration"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2 text-purple-400" />
+                        Regenerate
+                      </Button>
+                    </div>
                   ) : currentIllustration?.illustrationStatus === 'pending' || generatingIllustration ? (
                     <div className="flex flex-col items-center gap-4 text-zinc-600">
                       <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
@@ -420,13 +431,28 @@ function IllustratedBookReaderContent({ open, onClose, pdfUrl, bookTitle, initia
                     <div className="flex flex-col items-center gap-4 text-zinc-500">
                       <ImageIcon className="w-12 h-12 text-zinc-400" />
                       <p className="text-sm font-serif">Illustration unavailable</p>
+                      <Button
+                        size="sm"
+                        onClick={() => generatePageIllustration(pageNumber)}
+                        className="bg-amber-600 hover:bg-amber-700 text-white"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Try Again
+                      </Button>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-4 text-zinc-400">
                       <div className="w-32 h-32 border-2 border-dashed border-zinc-300 rounded-lg flex items-center justify-center">
                         <ImageIcon className="w-12 h-12 text-zinc-300" />
                       </div>
-                      <p className="text-sm font-serif text-center">Generating first illustration...</p>
+                      <p className="text-sm font-serif text-center">No illustration for this page.</p>
+                      <Button
+                        onClick={() => generatePageIllustration(pageNumber)}
+                        className="bg-amber-600 hover:bg-amber-700 text-white"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate Illustration
+                      </Button>
                     </div>
                   )}
                 </div>

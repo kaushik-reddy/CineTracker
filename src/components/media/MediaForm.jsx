@@ -469,30 +469,6 @@ CRITICAL: Use Google Books' official thumbnail URL structure with zoom=2 paramet
     }
   };
 
-  const applyPreviewData = () => {
-    if (previewData) {
-      // Update episode inputs and runtimes for series
-      if (previewData.type === 'series' && previewData.episodes_per_season) {
-        setEpisodeInputs(previewData.episodes_per_season.map(e => e.toString()));
-
-        // Set episode runtimes if available
-        if (previewData.episode_runtimes && previewData.episode_runtimes.length > 0) {
-          setEpisodeRuntimes(previewData.episode_runtimes.map(season =>
-            season.map(ep => ep.toString())
-          ));
-        }
-      }
-      setFormData(previewData);
-      setShowPreview(false);
-      setPreviewData(null);
-    }
-  };
-
-  const discardPreviewData = () => {
-    setShowPreview(false);
-    setPreviewData(null);
-  };
-
   const addActor = () => {
     if (actorInput.trim() && !formData.actors.includes(actorInput.trim())) {
       setFormData(prev => ({

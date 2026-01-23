@@ -250,11 +250,8 @@ export default function Home() {
     queryKey: ['media', user?.email, user?.id],
     queryFn: async () => {
       if (!user) return [];
-      // Admin sees all
-      if (user.role === 'admin') {
-        return await base44.entities.Media.list('-created_date');
-      }
 
+      // All users (including admin) see only their own media - strict isolation
       // Get user's own media
       const ownMedia = await base44.entities.Media.filter({ created_by: user.email }, '-created_date');
 
@@ -296,11 +293,8 @@ export default function Home() {
     queryKey: ['schedules', user?.email, user?.id],
     queryFn: async () => {
       if (!user) return [];
-      // Admin sees all
-      if (user.role === 'admin') {
-        return await base44.entities.WatchSchedule.list('-scheduled_date');
-      }
 
+      // All users (including admin) see only their own schedules - strict isolation
       // Users see their own schedules + schedules where they're invited
       const ownSchedules = await base44.entities.WatchSchedule.filter({ created_by: user.email }, '-scheduled_date');
 

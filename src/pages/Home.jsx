@@ -248,7 +248,7 @@ export default function Home() {
 
 
 
-  // Fetch media (user-isolated + media from shared schedules)
+  // Fetch media (user-isolated + media from shared schedules + Watch Parties)
   const { data: mediaList = [], isLoading: mediaLoading } = useQuery({
     queryKey: ['media', user?.email, user?.id],
     queryFn: async () => {
@@ -268,8 +268,17 @@ export default function Home() {
         s.viewers?.some(v => v.user_id === user.id || v.email === user.email)
       );
 
-      // Extract unique media IDs from schedules
-      const mediaIds = [...new Set(userSchedules.map(s => s.media_id))];
+      // Get Watch Parties where user is a participant
+      const allParties = await base44.entities.WatchParty.list();
+      const userParties = allParties.filter(p =>
+        p.host_email === user.email ||
+        p.participants?.some(pt => pt.user_id === user.id || pt.email === user.email)
+      );
+
+      // Extract unique media IDs from schedules and parties
+      const scheduleMediaIds = userSchedules.map(s => s.media_id);
+      const partyMediaIds = userParties.map(p => p.media_id);
+      const mediaIds = [...new Set([...scheduleMediaIds, ...partyMediaIds])];
 
       // Fetch media for these IDs
       const allMedia = await base44.entities.Media.list('-created_date');
@@ -310,28 +319,52 @@ export default function Home() {
     refetchInterval: view === 'watchparty' ? 2000 : false
   });
 
-  // Fetch schedules (user-isolated + shared schedules)
+  // Fetch schedules (user-isolated + shared schedules + Watch Parties as schedules)
   const { data: schedules = [], isLoading: schedulesLoading } = useQuery({
     queryKey: ['schedules', user?.email, user?.id],
     queryFn: async () => {
       if (!user) return [];
-      // Admin sees all
+
+      // 1. Get Regular Schedules
+      let regularSchedules = [];
       if (user.role === 'admin') {
-        return await base44.entities.WatchSchedule.list('-scheduled_date');
+        regularSchedules = await base44.entities.WatchSchedule.list('-scheduled_date');
+      } else {
+        // Users see their own schedules + schedules where they're invited
+        const ownSchedules = await base44.entities.WatchSchedule.filter({ created_by: user.email }, '-scheduled_date');
+
+        // Get all schedules to filter by viewers
+        const allSchedules = await base44.entities.WatchSchedule.list('-scheduled_date');
+        const sharedSchedules = allSchedules.filter(s =>
+          s.created_by !== user.email &&
+          s.viewers?.some(v => v.user_id === user.id || v.email === user.email)
+        );
+        regularSchedules = [...ownSchedules, ...sharedSchedules];
       }
 
-      // Users see their own schedules + schedules where they're invited
-      const ownSchedules = await base44.entities.WatchSchedule.filter({ created_by: user.email }, '-scheduled_date');
-
-      // Get all schedules to filter by viewers
-      const allSchedules = await base44.entities.WatchSchedule.list('-scheduled_date');
-      const sharedSchedules = allSchedules.filter(s =>
-        s.created_by !== user.email &&
-        s.viewers?.some(v => v.user_id === user.id || v.email === user.email)
+      // 2. Get Watch Parties and convert to Schedule format for Timeline
+      const allParties = await base44.entities.WatchParty.list();
+      const userParties = allParties.filter(p =>
+        p.host_email === user.email ||
+        p.participants?.some(pt => pt.user_id === user.id || pt.email === user.email)
       );
 
+      const partySchedules = userParties.map(party => ({
+        id: `party-${party.id}`, // Unique ID properly prefixed
+        original_id: party.id,
+        media_id: party.media_id,
+        scheduled_date: party.scheduled_start,
+        status: party.status === 'live' ? 'in_progress' : party.status === 'ended' ? 'completed' : 'scheduled',
+        type: 'watch_party',
+        party_name: party.party_name,
+        created_by: party.host_email,
+        elapsed_seconds: 0, // Parties manage their own progress
+        season_number: party.season_number,
+        episode_number: party.episode_number
+      }));
+
       // Combine and deduplicate
-      const combined = [...ownSchedules, ...sharedSchedules];
+      const combined = [...regularSchedules, ...partySchedules];
       const uniqueSchedules = Array.from(new Map(combined.map(s => [s.id, s])).values());
 
       return uniqueSchedules.sort((a, b) => new Date(b.scheduled_date) - new Date(a.scheduled_date));
@@ -2740,7 +2773,7 @@ export default function Home() {
                                                         key={i}
                                                         className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-purple-500 to-emerald-500 flex items-center justify-center text-xs font-bold text-white border-2 border-zinc-900"
                                                       >
-                                                        {p.name[0]}
+                                                        {p.name?.[0] || '?'}
                                                       </div>
                                                     ))}
                                                     {party.participants.length > 5 && (

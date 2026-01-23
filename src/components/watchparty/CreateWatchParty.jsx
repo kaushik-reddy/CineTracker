@@ -35,12 +35,12 @@ export default function CreateWatchParty({ open, onClose, media, schedule }) {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!selectedMedia) return;
-    
+
     const inviteCode = generateInviteCode();
 
     await executeAction('Creating Watch Party', async () => {
       const user = await base44.auth.me();
-      
+
       const scheduledDateTime = new Date(`${scheduledStart}T${startTime}`).toISOString();
 
       const party = await base44.entities.WatchParty.create({
@@ -59,7 +59,7 @@ export default function CreateWatchParty({ open, onClose, media, schedule }) {
         join_requests: [],
         participants: [{
           user_id: user.id,
-          name: user.full_name,
+          name: user.full_name || user.name || user.email?.split('@')[0],
           email: user.email,
           avatar: user.profile_picture || '',
           joined_at: new Date().toISOString()
@@ -228,7 +228,7 @@ export default function CreateWatchParty({ open, onClose, media, schedule }) {
                 </div>
                 <Switch checked={isPublic} onCheckedChange={setIsPublic} />
               </div>
-              
+
               <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
                 <div>
                   <Label className="text-white">Auto-Admit Invited Users</Label>

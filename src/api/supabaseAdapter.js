@@ -208,6 +208,7 @@ const auth = {
             id: user.id,
             email: user.email,
             name: appUser?.name || user.user_metadata?.full_name || user.email?.split('@')[0],
+            full_name: appUser?.name || user.user_metadata?.full_name || user.email?.split('@')[0],
             role: appUser?.role || role,
             ...appUser
         };

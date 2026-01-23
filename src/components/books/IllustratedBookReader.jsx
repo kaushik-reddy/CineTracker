@@ -10,6 +10,7 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { bookCache } from "../pwa/BookCache";
 import { useOffline } from "../pwa/OfflineManager";
+import { localFileStorage } from '@/api/localFileStorage';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -18,6 +19,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 export default function IllustratedBookReader({ open, onClose, pdfUrl, bookTitle, initialPage = 1, totalPages, mediaId, media }) {
   console.log('PDF Reader Debug:', { pdfUrl, pdfVersion: pdfjs.version, workerSrc: pdfjs.GlobalWorkerOptions.workerSrc });
   const [numPages, setNumPages] = useState(null);
+  const [resolvedPdfUrl, setResolvedPdfUrl] = useState(null);
   const [pageNumber, setPageNumber] = useState(initialPage);
   const [scale, setScale] = useState(1.0);
   const [illustratedMode, setIllustratedMode] = useState(media?.illustrated_mode_enabled || false);
@@ -44,6 +46,35 @@ export default function IllustratedBookReader({ open, onClose, pdfUrl, bookTitle
       checkIfCached();
     }
   }, [open, initialPage, media]);
+
+  // Resolve PDF URL (handle local-file://)
+  useEffect(() => {
+    let active = true;
+    const resolveUrl = async () => {
+      if (!pdfUrl) {
+        setResolvedPdfUrl(null);
+        return;
+      }
+
+      if (pdfUrl.startsWith('local-file://')) {
+        try {
+          const id = pdfUrl.replace('local-file://', '');
+          const record = await localFileStorage.getFile(id);
+          if (record && record.blob && active) {
+            const blobUrl = URL.createObjectURL(record.blob);
+            setResolvedPdfUrl(blobUrl);
+            return () => URL.revokeObjectURL(blobUrl);
+          }
+        } catch (error) {
+          console.error("Failed to resolve local file:", error);
+        }
+      } else {
+        setResolvedPdfUrl(pdfUrl);
+      }
+    };
+    resolveUrl();
+    return () => { active = false; };
+  }, [pdfUrl]);
 
   const checkIfCached = async () => {
     if (mediaId) {
@@ -403,7 +434,7 @@ Respond with ONLY the illustration prompt, nothing else.`,
                   minHeight: '600px'
                 }}>
                   <Document
-                    file={pdfUrl}
+                    file={resolvedPdfUrl}
                     onLoadSuccess={onDocumentLoadSuccess}
                     onLoadError={(error) => console.error('Error loading PDF:', error)}
                     loading={<div className="text-zinc-700 text-center py-10">Loading page...</div>}
@@ -466,7 +497,7 @@ Respond with ONLY the illustration prompt, nothing else.`,
                   backgroundColor: '#fffef8'
                 }}>
                   <Document
-                    file={pdfUrl}
+                    file={resolvedPdfUrl}
                     onLoadSuccess={onDocumentLoadSuccess}
                     onLoadError={(error) => console.error('Error loading PDF:', error)}
                     loading={<div className="text-zinc-700 text-center py-10">Loading page...</div>}

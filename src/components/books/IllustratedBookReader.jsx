@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, Image as ImageIcon, BookOpen, Loader2, Download, Cloud, CloudOff } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { supabaseAdapter as base44 } from "@/api/supabaseAdapter";
 import { toast } from "sonner";
 import { bookCache } from "../pwa/BookCache";
 import { useOffline } from "../pwa/OfflineManager";

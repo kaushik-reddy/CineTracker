@@ -1,8 +1,9 @@
-import { base44 } from "@/api/base44Client";
+import { generateIllustrationPrompt } from "@/api/geminiClient";
 
 /**
  * Illustration Agent
  * Handles the "creative" work of analyzing book text and generating illustrations.
+ * Uses Gemini (Text) + Pollinations.ai (Image).
  */
 export const IllustrationAgent = {
     /**
@@ -15,41 +16,33 @@ export const IllustrationAgent = {
     generateValues: async (bookTitle, pageNumber, pageText = "") => {
         console.log(`[IllustrationAgent] Starting work for ${bookTitle} page ${pageNumber}`);
 
-        // 1. Contextualize
-        // If we extracted real text from PDF, we would use it here.
-        // For now, we simulate the "reading" of the page by asking the LLM to imagine it based on the title.
-        const contextPrompt = pageText
-            ? `Page content: "${pageText}"`
-            : `This is page ${pageNumber} of the book "${bookTitle}".`;
-
-        // 2. Invoke LLM for the Creative Prompt
-        const llmPrompt = `
-            You are an expert book illustrator.
-            ${contextPrompt}
-            
-            Create a detailed, atmospheric illustration prompt for this page.
-            Style: Vintage, etching, 19th-century classic literature style, black and white or sepia.
-            Focus: High contrast, mood, no text, key event or setting.
-            
-            Respond with ONLY the image generation prompt.
-        `;
-
-        const illustrationPrompt = await base44.integrations.Core.InvokeLLM({
-            prompt: llmPrompt,
-            add_context_from_internet: false
-        });
+        // 1. Generate Creative Prompt using Gemini
+        let illustrationPrompt;
+        try {
+            illustrationPrompt = await generateIllustrationPrompt(bookTitle, pageNumber, pageText);
+        } catch (error) {
+            console.error("Gemini Prompt Generation failed, falling back to simple prompt.", error);
+            illustrationPrompt = `Vintage etching of a scene from ${bookTitle}, page ${pageNumber}. Classic book illustration style.`;
+        }
 
         console.log(`[IllustrationAgent] Generated Prompt:`, illustrationPrompt);
 
-        // 3. Generate Image
-        const imageResponse = await base44.integrations.Core.GenerateImage({
-            prompt: `${illustrationPrompt}. Style: Classic book etching, ink drawing, highly detailed, black and white, woodcut style.`
-        });
+        // 2. Generate Image using Pollinations.ai (Free, No Key)
+        // We ensure the style is baked into the final image prompt
+        const finalImagePrompt = `${illustrationPrompt} style: vintage etching, ink drawing, woodcut, black and white, high detailed, masterpiece`;
+        const encodedPrompt = encodeURIComponent(finalImagePrompt);
 
-        console.log(`[IllustrationAgent] Generated Image:`, imageResponse.url);
+        // Add random seed to ensure unique images if retried
+        const seed = Math.floor(Math.random() * 1000000);
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=1200&model=flux&seed=${seed}&nologo=true`;
+
+        console.log(`[IllustrationAgent] Generated Image URL:`, imageUrl);
+
+        // Simulate a short wait to make it feel like "work" and ensure URL is ready (optional, but good UX)
+        // Pollinations is instant, so we don't strictly need to wait, but returning immediately is fine.
 
         return {
-            url: imageResponse.url,
+            url: imageUrl,
             prompt: illustrationPrompt
         };
     }

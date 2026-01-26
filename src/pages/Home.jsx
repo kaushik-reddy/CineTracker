@@ -277,7 +277,17 @@ export default function Home() {
       );
 
       // Extract unique media IDs from schedules
-      const mediaIds = [...new Set(userSchedules.map(s => s.media_id))];
+      const scheduleMediaIds = userSchedules.map(s => s.media_id);
+
+      // Also get media IDs from Watch Parties
+      const allParties = await base44.entities.WatchParty.list();
+      const userParties = allParties.filter(p =>
+        p.host_email === user.email || p.participants?.some(part => part.email === user.email)
+      );
+      const partyMediaIds = userParties.map(p => p.media_id);
+
+      // Combine all media IDs
+      const mediaIds = [...new Set([...scheduleMediaIds, ...partyMediaIds])];
 
       // Fetch media for these IDs
       const allMedia = await base44.entities.Media.list('-created_date');
@@ -303,18 +313,18 @@ export default function Home() {
   // Real-time sync for schedules
   useRealTimeSubscription('WatchSchedule', {
     enabled: !!user,
-    // Filter for changes relevant to this user (created by them or where they are a viewer)
-    // Note: Supabase realtime filters are limited. simpler to just listen to all public changes on the table
-    // and let the query invalidation handle the fetching of correct data.
-    // However, for efficiency, we can filter by user_id if we have a column for it, but WatchSchedule uses created_by (email).
-    // Filtering by string column in Supabase Realtime: `created_by=eq.${user.email}`
-    // But this won't catch changes where user is a viewer but not creator.
-    // So for now, we'll subscribe to all changes on WatchSchedule and refetch.
-    // Optimisation: We could have multiple subscriptions or server-side filtering, but for this app scale, refetching is fine.
   }, (payload) => {
-    console.log('Real-time update received:', payload);
+    console.log('Real-time update received (Schedule):', payload);
     queryClient.invalidateQueries({ queryKey: ['schedules'] });
-    // Also invalidate media in case status changed
+    queryClient.invalidateQueries({ queryKey: ['media'] });
+  });
+
+  // Real-time sync for watch parties
+  useRealTimeSubscription('WatchParty', {
+    enabled: !!user,
+  }, (payload) => {
+    console.log('Real-time update received (Party):', payload);
+    queryClient.invalidateQueries({ queryKey: ['schedules'] });
     queryClient.invalidateQueries({ queryKey: ['media'] });
   });
 

@@ -30,41 +30,58 @@ export default function JoinWatchParty({ open, onClose }) {
         }
 
         await executeAction('Searching Party', async () => {
-            // Normalize input: remove spaces, ensure uppercase
+            // Normalize input
             let normalizedCode = inviteCode.toUpperCase().replace(/\s/g, '');
-
-            // Add prefix if missing (optional enhancement, but safe)
             if (!normalizedCode.startsWith('CT-') && normalizedCode.length === 6) {
                 normalizedCode = 'CT-' + normalizedCode;
             }
 
-            // Simple filter first
-            const parties = await base44.entities.WatchParty.filter({
-                invite_code: normalizedCode
-            });
+            console.log('Searching for code:', normalizedCode);
 
-            if (parties.length === 0) {
-                throw new Error('Party not found');
+            let found = null;
+
+            // Strategy 1: Direct Filter (Fastest)
+            try {
+                const parties = await base44.entities.WatchParty.filter({
+                    invite_code: normalizedCode
+                });
+                if (parties && parties.length > 0) {
+                    found = parties.find(p => ['scheduled', 'live'].includes(p.status));
+                }
+            } catch (e) {
+                console.warn('Direct filter failed, attempting fallback...', e);
             }
 
-            const party = parties.find(p => ['scheduled', 'live'].includes(p.status));
+            // Strategy 2: List All & Find (Fail-safe)
+            if (!found) {
+                console.log('Using fallback search strategy...');
+                try {
+                    const allParties = await base44.entities.WatchParty.list();
+                    found = allParties.find(p =>
+                        p.invite_code === normalizedCode &&
+                        ['scheduled', 'live'].includes(p.status)
+                    );
+                } catch (e) {
+                    console.error("Fallback search failed", e);
+                }
+            }
 
-            if (!party) {
-                throw new Error('Party has ended or is not active');
+            if (!found) {
+                throw new Error('Party not found or has ended');
             }
 
             // Check if party is full
-            if (party.participants?.length >= party.max_participants) {
+            if (found.participants?.length >= found.max_participants) {
                 throw new Error('Party is full');
             }
 
             // Load media
-            const mediaData = await base44.entities.Media.filter({ id: party.media_id });
+            const mediaData = await base44.entities.Media.filter({ id: found.media_id });
             if (mediaData.length > 0) {
                 setMedia(mediaData[0]);
             }
 
-            setFoundParty(party);
+            setFoundParty(found);
         }, {
             successTitle: 'Party Found!',
             successSubtitle: 'Ready to join'

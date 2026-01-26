@@ -71,6 +71,15 @@ export default function TimelineFlowCard({
     return isNaN(date.getTime()) ? null : date;
   };
 
+  const safeFormat = (date, formatStr) => {
+    if (!date || isNaN(new Date(date).getTime())) return 'N/A';
+    try {
+      return format(new Date(date), formatStr);
+    } catch (e) {
+      return 'N/A';
+    }
+  };
+
   const scheduledTime = safeDate(schedule.scheduled_date) || new Date(); // Fallback to now if invalid to prevent crash
   const startedTime = safeDate(schedule.started_at);
   const completedTime = safeDate(schedule.rating_submitted_at) ||
@@ -141,16 +150,16 @@ export default function TimelineFlowCard({
                 <div className="mt-1 text-[10px]">
                   {schedule.status === 'completed' ? (
                     <span className="text-blue-400">
-                      Ended On: {format(completedTime, 'MMM d, h:mm a')}
+                      Ended On: {safeFormat(completedTime, 'MMM d, h:mm a')}
                     </span>
                   ) : (
                     <span className="text-amber-400">
-                      Ends On: {format(
-                        schedule.status === 'in_progress' || schedule.status === 'paused'
+                      Ends On: {(() => {
+                        const baseDate = (schedule.status === 'in_progress' || schedule.status === 'paused')
                           ? new Date(Date.now() + (runtime * 60 - currentElapsed) * 1000)
-                          : new Date(scheduledTime.getTime() + runtime * 60 * 1000),
-                        'MMM d, h:mm a'
-                      )}
+                          : new Date(scheduledTime.getTime() + runtime * 60 * 1000);
+                        return safeFormat(baseDate, 'MMM d, h:mm a');
+                      })()}
                     </span>
                   )}
                   {schedule.is_watch_party && (
@@ -211,7 +220,7 @@ export default function TimelineFlowCard({
                   <div className="mt-2 text-center">
                     <p className="text-zinc-400 text-[9px]">Scheduled Time</p>
                     <p className="text-white font-medium text-[10px]">
-                      {format(scheduledTime, 'MMM d, h:mm a')}
+                      {safeFormat(scheduledTime, 'MMM d, h:mm a')}
                     </p>
                   </div>
                 </div>
@@ -251,7 +260,7 @@ export default function TimelineFlowCard({
                     <div className="mt-2 text-center">
                       <p className="text-zinc-400 text-[9px]">Start Time</p>
                       <p className="text-emerald-400 font-medium text-[10px]">
-                        {format(startedTime, 'MMM d, h:mm a')}
+                        {safeFormat(startedTime, 'MMM d, h:mm a')}
                       </p>
                     </div>
                   )}
@@ -280,7 +289,7 @@ export default function TimelineFlowCard({
                     <div className="mt-2 text-center">
                       <p className="text-zinc-400 text-[9px]">End Time</p>
                       <p className="text-blue-400 font-medium text-[10px]">
-                        {format(completedTime, 'MMM d, h:mm a')}
+                        {safeFormat(completedTime, 'MMM d, h:mm a')}
                       </p>
                     </div>
                   )}

@@ -239,372 +239,372 @@ export default function CinematicScheduleCard({
             )}
           </div>
           <span className="text-zinc-300 text-[10px] font-medium">{getTimeLabel()}</span>
-        </div>
 
-        {/* Watch Party Host Info */}
-        {schedule.is_watch_party && schedule.party_data && (
-          <div className="mb-2 flex items-center gap-1.5 px-0.5">
-            <div className="w-4 h-4 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
-              <Users className="w-2.5 h-2.5 text-purple-400" />
+
+          {/* Watch Party Host Info */}
+          {schedule.is_watch_party && schedule.party_data && (
+            <div className="mb-2 flex items-center gap-1.5 px-0.5">
+              <div className="w-4 h-4 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
+                <Users className="w-2.5 h-2.5 text-purple-400" />
+              </div>
+              <span className="text-[10px] text-zinc-400">Hosted by <span className="text-white font-medium">
+                {(() => {
+                  const hostEmail = schedule.party_data.host_email;
+                  const host = schedule.party_data.participants?.find(p => p.email === hostEmail);
+                  return host?.name || hostEmail?.split('@')[0] || 'Unknown';
+                })()}
+              </span></span>
             </div>
-            <span className="text-[10px] text-zinc-400">Hosted by <span className="text-white font-medium">
-              {(() => {
-                const hostEmail = schedule.party_data.host_email;
-                const host = schedule.party_data.participants?.find(p => p.email === hostEmail);
-                return host?.name || hostEmail?.split('@')[0] || 'Unknown';
-              })()}
-            </span></span>
-          </div>
-        )}
+          )}
 
-        {/* Main layout - Title section and poster */}
-        <div className="flex gap-3 mb-2 flex-shrink-0">
-          {/* Left - Content */}
-          <div className="flex-1 min-w-0">
-            {/* Title with episode after */}
-            <div className="flex items-baseline justify-between gap-2 mb-1 flex-wrap">
-              <div className="flex items-baseline gap-2 flex-1 min-w-0">
-                <h3
-                  className="text-white font-bold text-base cursor-pointer hover:text-amber-400 transition-colors leading-tight"
-                  onClick={() => onNavigate?.(media.id)}
-                >
-                  {media.title}
-                </h3>
-                {schedule.season_number && (
-                  <span className="text-amber-400 text-xs font-semibold whitespace-nowrap">
-                    S{String(schedule.season_number).padStart(2, '0')}E{String(schedule.episode_number).padStart(2, '0')}
+          {/* Main layout - Title section and poster */}
+          <div className="flex gap-3 mb-2 flex-shrink-0">
+            {/* Left - Content */}
+            <div className="flex-1 min-w-0">
+              {/* Title with episode after */}
+              <div className="flex items-baseline justify-between gap-2 mb-1 flex-wrap">
+                <div className="flex items-baseline gap-2 flex-1 min-w-0">
+                  <h3
+                    className="text-white font-bold text-base cursor-pointer hover:text-amber-400 transition-colors leading-tight"
+                    onClick={() => onNavigate?.(media.id)}
+                  >
+                    {media.title}
+                  </h3>
+                  {schedule.season_number && (
+                    <span className="text-amber-400 text-xs font-semibold whitespace-nowrap">
+                      S{String(schedule.season_number).padStart(2, '0')}E{String(schedule.episode_number).padStart(2, '0')}
+                    </span>
+                  )}
+                </div>
+                <StudioLogos studios={media.studios} size="sm" maxDisplay={1} className="flex-shrink-0" />
+              </div>
+
+              {/* Metadata row - duration, device, seats */}
+              <div className="flex items-center gap-2 text-xs text-zinc-300 mb-1 flex-wrap">
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {Math.floor(episodeRuntime / 60)}h {episodeRuntime % 60}m
+                </span>
+                <span className="flex items-center">
+                  <DeviceLogo device={deviceName} size="xl" className="text-zinc-300" />
+                </span>
+                {schedule.seats_selected && schedule.seats_selected.length > 0 && (
+                  <span className="flex items-center gap-1 text-purple-400">
+                    <Armchair className="w-3 h-3" />
+                    {schedule.seats_selected.length} seat{schedule.seats_selected.length > 1 ? 's' : ''}
                   </span>
                 )}
               </div>
-              <StudioLogos studios={media.studios} size="sm" maxDisplay={1} className="flex-shrink-0" />
+
+              {/* Platform and Formats row */}
+              <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                {media.platform && (
+                  <PlatformBadge platform={media.platform} size="sm" />
+                )}
+                {schedule.audio_format && (
+                  <AudioFormatBadge format={schedule.audio_format} size="sm" />
+                )}
+                {schedule.video_format && (
+                  <VideoFormatBadge format={schedule.video_format} size="sm" />
+                )}
+              </div>
+
+              {/* Viewers row */}
+              {schedule.viewers && schedule.viewers.length > 0 && (
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Users className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <span className="text-[10px] text-zinc-400">With:</span>
+                    {schedule.viewers.slice(0, 3).map((viewer, idx) => (
+                      <div
+                        key={idx}
+                        className="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/50 flex items-center justify-center"
+                        title={viewer.name || viewer.email}
+                      >
+                        {viewer.avatar ? (
+                          <img src={viewer.avatar} alt={viewer.name} className="w-full h-full rounded-full object-cover" />
+                        ) : (
+                          <span className="text-[8px] text-amber-400 font-bold">
+                            {(viewer.name || viewer.email)?.[0]?.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                    {schedule.viewers.length > 3 && (
+                      <span className="text-[10px] text-zinc-400">+{schedule.viewers.length - 3}</span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Metadata row - duration, device, seats */}
-            <div className="flex items-center gap-2 text-xs text-zinc-300 mb-1 flex-wrap">
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {Math.floor(episodeRuntime / 60)}h {episodeRuntime % 60}m
-              </span>
-              <span className="flex items-center">
-                <DeviceLogo device={deviceName} size="xl" className="text-zinc-300" />
-              </span>
-              {schedule.seats_selected && schedule.seats_selected.length > 0 && (
-                <span className="flex items-center gap-1 text-purple-400">
-                  <Armchair className="w-3 h-3" />
-                  {schedule.seats_selected.length} seat{schedule.seats_selected.length > 1 ? 's' : ''}
-                </span>
+            {/* Right - Poster */}
+            <div className="flex-shrink-0">
+              {media.poster_url ? (
+                <img
+                  src={media.poster_url}
+                  alt={media.title}
+                  className="w-20 h-28 object-cover rounded-lg border-2 border-zinc-700/50 shadow-lg"
+                />
+              ) : (
+                <div className="w-20 h-28 bg-zinc-800 rounded-lg border-2 border-zinc-700/50 flex items-center justify-center text-2xl text-zinc-600">
+                  {media.title?.[0]}
+                </div>
               )}
             </div>
+          </div>
 
-            {/* Platform and Formats row */}
-            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-              {media.platform && (
-                <PlatformBadge platform={media.platform} size="sm" />
-              )}
-              {schedule.audio_format && (
-                <AudioFormatBadge format={schedule.audio_format} size="sm" />
-              )}
-              {schedule.video_format && (
-                <VideoFormatBadge format={schedule.video_format} size="sm" />
-              )}
+          {/* Divider */}
+          <div className="border-b border-dashed border-zinc-600 mb-2 flex-shrink-0"></div>
+
+          {/* Scrollable content area */}
+          <div className="flex-1 overflow-y-auto mb-2 space-y-2 scrollbar-thin scrollbar-thumb-zinc-700">
+            {/* Schedule time */}
+            <div className="flex items-center gap-1.5 text-xs text-zinc-300">
+              <CalendarIcon className="w-3 h-3" />
+              <span>{getScheduleTimeLabel()}</span>
             </div>
 
-            {/* Viewers row */}
-            {schedule.viewers && schedule.viewers.length > 0 && (
-              <div className="flex items-center gap-1.5 mb-1">
-                <Users className="w-3 h-3 text-amber-400 flex-shrink-0" />
-                <div className="flex items-center gap-1 flex-wrap">
-                  <span className="text-[10px] text-zinc-400">With:</span>
-                  {schedule.viewers.slice(0, 3).map((viewer, idx) => (
-                    <div
-                      key={idx}
-                      className="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/50 flex items-center justify-center"
-                      title={viewer.name || viewer.email}
-                    >
-                      {viewer.avatar ? (
-                        <img src={viewer.avatar} alt={viewer.name} className="w-full h-full rounded-full object-cover" />
-                      ) : (
-                        <span className="text-[8px] text-amber-400 font-bold">
-                          {(viewer.name || viewer.email)?.[0]?.toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                  {schedule.viewers.length > 3 && (
-                    <span className="text-[10px] text-zinc-400">+{schedule.viewers.length - 3}</span>
-                  )}
+            {/* Description */}
+            {media.description && (
+              <p className="text-zinc-400 text-[11px] leading-relaxed line-clamp-2">
+                {media.description}
+              </p>
+            )}
+
+            {/* Cast */}
+            {media.actors && media.actors.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {media.actors.slice(0, 5).map(actor => (
+                  <span key={actor} className="px-2 py-0.5 bg-zinc-800/80 border border-zinc-700 rounded-full text-zinc-300 text-[10px]">
+                    {actor}
+                  </span>
+                ))}
+                {media.actors.length > 5 && (
+                  <span className="px-2 py-0.5 bg-zinc-800/80 border border-zinc-700 rounded-full text-zinc-400 text-[10px]">
+                    +{media.actors.length - 5}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Progress bar for currently watching */}
+          {isCurrentlyWatching && (
+            <div className="mb-2 flex-shrink-0">
+              <div className="border-t border-dotted border-zinc-600 mb-2 pt-2">
+                <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden mb-1">
+                  <motion.div
+                    className="absolute inset-y-0 left-0 rounded-full bg-emerald-500"
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] text-zinc-500">
+                  <span>{Math.floor(currentElapsed / 3600)}h {Math.floor((currentElapsed % 3600) / 60)}m {currentElapsed % 60}s</span>
+                  <span className="text-white font-semibold">{Math.round(progress)}%</span>
+                  <span>{Math.floor((episodeRuntime * 60 - currentElapsed) / 3600)}h {Math.floor(((episodeRuntime * 60 - currentElapsed) % 3600) / 60)}m {(episodeRuntime * 60 - currentElapsed) % 60}s</span>
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* Right - Poster */}
-          <div className="flex-shrink-0">
-            {media.poster_url ? (
-              <img
-                src={media.poster_url}
-                alt={media.title}
-                className="w-20 h-28 object-cover rounded-lg border-2 border-zinc-700/50 shadow-lg"
-              />
-            ) : (
-              <div className="w-20 h-28 bg-zinc-800 rounded-lg border-2 border-zinc-700/50 flex items-center justify-center text-2xl text-zinc-600">
-                {media.title?.[0]}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="border-b border-dashed border-zinc-600 mb-2 flex-shrink-0"></div>
-
-        {/* Scrollable content area */}
-        <div className="flex-1 overflow-y-auto mb-2 space-y-2 scrollbar-thin scrollbar-thumb-zinc-700">
-          {/* Schedule time */}
-          <div className="flex items-center gap-1.5 text-xs text-zinc-300">
-            <CalendarIcon className="w-3 h-3" />
-            <span>{getScheduleTimeLabel()}</span>
-          </div>
-
-          {/* Description */}
-          {media.description && (
-            <p className="text-zinc-400 text-[11px] leading-relaxed line-clamp-2">
-              {media.description}
-            </p>
-          )}
-
-          {/* Cast */}
-          {media.actors && media.actors.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {media.actors.slice(0, 5).map(actor => (
-                <span key={actor} className="px-2 py-0.5 bg-zinc-800/80 border border-zinc-700 rounded-full text-zinc-300 text-[10px]">
-                  {actor}
-                </span>
-              ))}
-              {media.actors.length > 5 && (
-                <span className="px-2 py-0.5 bg-zinc-800/80 border border-zinc-700 rounded-full text-zinc-400 text-[10px]">
-                  +{media.actors.length - 5}
-                </span>
-              )}
             </div>
           )}
-        </div>
 
-        {/* Progress bar for currently watching */}
-        {isCurrentlyWatching && (
-          <div className="mb-2 flex-shrink-0">
-            <div className="border-t border-dotted border-zinc-600 mb-2 pt-2">
-              <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden mb-1">
-                <motion.div
-                  className="absolute inset-y-0 left-0 rounded-full bg-emerald-500"
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.5 }}
-                />
-              </div>
-              <div className="flex justify-between text-[10px] text-zinc-500">
-                <span>{Math.floor(currentElapsed / 3600)}h {Math.floor((currentElapsed % 3600) / 60)}m {currentElapsed % 60}s</span>
-                <span className="text-white font-semibold">{Math.round(progress)}%</span>
-                <span>{Math.floor((episodeRuntime * 60 - currentElapsed) / 3600)}h {Math.floor(((episodeRuntime * 60 - currentElapsed) % 3600) / 60)}m {(episodeRuntime * 60 - currentElapsed) % 60}s</span>
-              </div>
+          {/* Skip buttons and Jump for watching */}
+          {isCurrentlyWatching && canWatch && media.type !== 'book' && (
+            <div className="flex gap-1.5 mb-2 flex-shrink-0">
+              <Button
+                size="sm"
+                onClick={async () => {
+                  const newElapsed = Math.max(0, currentElapsed - 300);
+                  await onJumpToTime(schedule.id, newElapsed);
+                }}
+                className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/50 text-[10px] h-7"
+              >
+                <Rewind className="w-2.5 h-2.5 mr-0.5" />
+                -5m
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => onOpenJumpModal({ schedule, media })}
+                className="flex-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/50 text-[10px] h-7"
+              >
+                Jump
+              </Button>
+              <Button
+                size="sm"
+                onClick={async () => {
+                  const newElapsed = Math.min(currentElapsed + 300, episodeRuntime * 60);
+                  await onJumpToTime(schedule.id, newElapsed);
+                }}
+                className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border border-orange-500/50 text-[10px] h-7"
+              >
+                <FastForward className="w-2.5 h-2.5 mr-0.5" />
+                +5m
+              </Button>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Skip buttons and Jump for watching */}
-        {isCurrentlyWatching && canWatch && media.type !== 'book' && (
-          <div className="flex gap-1.5 mb-2 flex-shrink-0">
-            <Button
-              size="sm"
-              onClick={async () => {
-                const newElapsed = Math.max(0, currentElapsed - 300);
-                await onJumpToTime(schedule.id, newElapsed);
-              }}
-              className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/50 text-[10px] h-7"
-            >
-              <Rewind className="w-2.5 h-2.5 mr-0.5" />
-              -5m
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => onOpenJumpModal({ schedule, media })}
-              className="flex-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/50 text-[10px] h-7"
-            >
-              Jump
-            </Button>
-            <Button
-              size="sm"
-              onClick={async () => {
-                const newElapsed = Math.min(currentElapsed + 300, episodeRuntime * 60);
-                await onJumpToTime(schedule.id, newElapsed);
-              }}
-              className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border border-orange-500/50 text-[10px] h-7"
-            >
-              <FastForward className="w-2.5 h-2.5 mr-0.5" />
-              +5m
-            </Button>
-          </div>
-        )}
+          {/* Adjust Progress for books */}
+          {isCurrentlyWatching && canWatch && media.type === 'book' && (
+            <div className="mb-2 flex-shrink-0">
+              <Button
+                size="sm"
+                onClick={() => onOpenJumpModal({ schedule, media })}
+                className="w-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/50 text-[10px] h-7"
+              >
+                Adjust Progress
+              </Button>
+            </div>
+          )}
 
-        {/* Adjust Progress for books */}
-        {isCurrentlyWatching && canWatch && media.type === 'book' && (
-          <div className="mb-2 flex-shrink-0">
-            <Button
-              size="sm"
-              onClick={() => onOpenJumpModal({ schedule, media })}
-              className="w-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/50 text-[10px] h-7"
-            >
-              Adjust Progress
-            </Button>
-          </div>
-        )}
-
-        {/* Action buttons */}
-        <div className="flex gap-1.5 flex-shrink-0">
-          {isFutureRelease ? (
-            <>
-              <Button
-                size="sm"
-                disabled
-                className={`flex-1 ${config.buttonClass} h-9 rounded-lg text-xs`}
-              >
-                <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
-                {config.buttonText}
-              </Button>
-              <Button
-                size="sm"
-                disabled={!canEdit}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  canEdit && onEditSchedule(schedule);
-                }}
-                className={`${!canEdit ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-white border border-zinc-600'} h-9 px-2.5 rounded-lg`}
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </Button>
-              <Button
-                size="sm"
-                disabled={!canDelete}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  canDelete && setDeleteConfirm(schedule.id);
-                }}
-                className={`${!canDelete ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-red-400 border border-zinc-600'} h-9 px-2.5 rounded-lg`}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            </>
-          ) : isCurrentlyWatching ? (
-            <>
-              <Button
-                size="sm"
-                disabled={!canWatch}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!canWatch) return;
-                  onPlayPause(schedule);
-                }}
-                className={`flex-1 ${!canWatch ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : config.buttonClass} h-9 rounded-lg text-xs`}
-              >
-                <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
-                {config.buttonText}
-              </Button>
-              {!isPlaying && (
-                <>
-                  <Button
-                    size="sm"
-                    disabled={!canEdit}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      canEdit && onEditSchedule(schedule);
-                    }}
-                    className={`${!canEdit ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-white border border-zinc-600'} h-9 px-2.5 rounded-lg`}
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled={!canDelete}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      canDelete && setDeleteConfirm(schedule.id);
-                    }}
-                    className={`${!canDelete ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-red-400 border border-zinc-600'} h-9 px-2.5 rounded-lg`}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              {/* Logic for default non-overdue/non-future items */}
-              {schedule.is_watch_party ? (
+          {/* Action buttons */}
+          <div className="flex gap-1.5 flex-shrink-0">
+            {isFutureRelease ? (
+              <>
                 <Button
                   size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Pass schedule so Home knows which party to open
-                    onWatch(media, schedule);
-                  }}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-9 rounded-lg text-xs font-bold shadow-lg shadow-purple-900/20"
-                >
-                  <Users className="w-3.5 h-3.5 mr-1.5" />
-                  JOIN PARTY
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  disabled={!canWatch && !canEdit}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (isOverdue && canEdit) {
-                      onReschedule(schedule);
-                    } else if (!isOverdue && canWatch) {
-                      onWatch(media);
-                    }
-                  }}
-                  className={`flex-1 ${(!canWatch && !canEdit) ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : config.buttonClass} h-9 rounded-lg text-xs`}
+                  disabled
+                  className={`flex-1 ${config.buttonClass} h-9 rounded-lg text-xs`}
                 >
                   <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
                   {config.buttonText}
                 </Button>
-              )}
+                <Button
+                  size="sm"
+                  disabled={!canEdit}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    canEdit && onEditSchedule(schedule);
+                  }}
+                  className={`${!canEdit ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-white border border-zinc-600'} h-9 px-2.5 rounded-lg`}
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={!canDelete}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    canDelete && setDeleteConfirm(schedule.id);
+                  }}
+                  className={`${!canDelete ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-red-400 border border-zinc-600'} h-9 px-2.5 rounded-lg`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </>
+            ) : isCurrentlyWatching ? (
+              <>
+                <Button
+                  size="sm"
+                  disabled={!canWatch}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!canWatch) return;
+                    onPlayPause(schedule);
+                  }}
+                  className={`flex-1 ${!canWatch ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : config.buttonClass} h-9 rounded-lg text-xs`}
+                >
+                  <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                  {config.buttonText}
+                </Button>
+                {!isPlaying && (
+                  <>
+                    <Button
+                      size="sm"
+                      disabled={!canEdit}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        canEdit && onEditSchedule(schedule);
+                      }}
+                      className={`${!canEdit ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-white border border-zinc-600'} h-9 px-2.5 rounded-lg`}
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={!canDelete}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        canDelete && setDeleteConfirm(schedule.id);
+                      }}
+                      className={`${!canDelete ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-red-400 border border-zinc-600'} h-9 px-2.5 rounded-lg`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Logic for default non-overdue/non-future items */}
+                {schedule.is_watch_party ? (
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Pass schedule so Home knows which party to open
+                      onWatch(media, schedule);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-9 rounded-lg text-xs font-bold shadow-lg shadow-purple-900/20"
+                  >
+                    <Users className="w-3.5 h-3.5 mr-1.5" />
+                    JOIN PARTY
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={!canWatch && !canEdit}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isOverdue && canEdit) {
+                        onReschedule(schedule);
+                      } else if (!isOverdue && canWatch) {
+                        onWatch(media);
+                      }
+                    }}
+                    className={`flex-1 ${(!canWatch && !canEdit) ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : config.buttonClass} h-9 rounded-lg text-xs`}
+                  >
+                    <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                    {config.buttonText}
+                  </Button>
+                )}
 
-              <Button
-                size="sm"
-                disabled={!canEdit}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  canEdit && onEditSchedule(schedule);
-                }}
-                className={`${!canEdit ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-white border border-zinc-600'} h-9 px-2.5 rounded-lg`}
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </Button>
-              {!schedule.is_watch_party && (
-                <div onClick={e => e.stopPropagation()}>
-                  <WatchPartyButton
-                    media={media}
-                    schedule={schedule}
-                    className="h-9 rounded-lg text-xs px-3"
-                  />
-                </div>
-              )}
-              <Button
-                size="sm"
-                disabled={!canDelete}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  canDelete && setDeleteConfirm(schedule.id);
-                }}
-                className={`${!canDelete ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-red-400 border border-zinc-600'} h-9 px-2.5 rounded-lg`}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            </>
-          )}
+                <Button
+                  size="sm"
+                  disabled={!canEdit}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    canEdit && onEditSchedule(schedule);
+                  }}
+                  className={`${!canEdit ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-white border border-zinc-600'} h-9 px-2.5 rounded-lg`}
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </Button>
+                {!schedule.is_watch_party && (
+                  <div onClick={e => e.stopPropagation()}>
+                    <WatchPartyButton
+                      media={media}
+                      schedule={schedule}
+                      className="h-9 rounded-lg text-xs px-3"
+                    />
+                  </div>
+                )}
+                <Button
+                  size="sm"
+                  disabled={!canDelete}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    canDelete && setDeleteConfirm(schedule.id);
+                  }}
+                  className={`${!canDelete ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-red-400 border border-zinc-600'} h-9 px-2.5 rounded-lg`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    </Card>
-    </motion.div >
+      </Card>
+    </motion.div>
   );
 }

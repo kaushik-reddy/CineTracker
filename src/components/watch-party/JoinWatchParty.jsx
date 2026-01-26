@@ -54,13 +54,19 @@ export default function JoinWatchParty({ open, onClose }) {
 
             // Strategy 2: List All & Find (Fail-safe)
             if (!found) {
-                console.log('Using fallback search strategy...');
+                console.log('Using fallback search strategy for code:', normalizedCode);
                 try {
                     const allParties = await base44.entities.WatchParty.list();
-                    found = allParties.find(p =>
-                        p.invite_code === normalizedCode &&
-                        ['scheduled', 'live'].includes(p.status)
-                    );
+                    console.log(`Scanning ${allParties.length} total parties...`);
+
+                    found = allParties.find(p => {
+                        const dbCode = (p.invite_code || '').toUpperCase().replace(/\s/g, '');
+                        const isMatch = dbCode === normalizedCode;
+                        const isStatusValid = ['scheduled', 'live'].includes(p.status);
+
+                        if (isMatch) console.log(`Found MATCH but status is: ${p.status}`);
+                        return isMatch && isStatusValid;
+                    });
                 } catch (e) {
                     console.error("Fallback search failed", e);
                 }

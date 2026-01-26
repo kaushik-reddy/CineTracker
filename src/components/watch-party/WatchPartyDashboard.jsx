@@ -1,5 +1,12 @@
-import { Trash2, AlertCircle } from "lucide-react";
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Trash2, AlertCircle, Users, Clock, Search, Plus, Play } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { base44 } from "@/api/base44Client";
+import CreateWatchParty from "./CreateWatchParty";
+import JoinWatchParty from "./JoinWatchParty";
+import WatchPartyPlayer from "./WatchPartyPlayer";
 
 export default function WatchPartyDashboard({ open, onClose }) {
     const [showCreate, setShowCreate] = useState(false);

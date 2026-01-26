@@ -100,11 +100,9 @@ export default function TimelineViewNew({ schedules = [], mediaMap = {}, onMarkC
       grouped[day.toISOString()] = [];
     });
 
-    schedules.forEach((schedule) => {
-      if (!schedule.scheduled_date) return;
+    validSchedules.forEach((schedule) => {
+      // safe to use directly as validSchedules filters out bad dates
       const scheduleDate = new Date(schedule.scheduled_date);
-      if (isNaN(scheduleDate.getTime())) return;
-
       const dayKey = days.find((day) => isSameDay(day, scheduleDate))?.toISOString();
 
       if (dayKey && mediaMap[schedule.media_id]) {
@@ -120,7 +118,7 @@ export default function TimelineViewNew({ schedules = [], mediaMap = {}, onMarkC
     });
 
     return grouped;
-  }, [schedules, mediaMap, days]);
+  }, [validSchedules, mediaMap, days]);
 
   const handleRescheduleClick = (schedule) => {
     const hoursSinceScheduled = differenceInHours(new Date(), new Date(schedule.scheduled_date));
@@ -131,7 +129,7 @@ export default function TimelineViewNew({ schedules = [], mediaMap = {}, onMarkC
     }
   };
 
-  const hasSchedules = schedules.length > 0;
+  const hasSchedules = validSchedules.length > 0;
 
   if (!hasSchedules) {
     return (
@@ -165,20 +163,16 @@ export default function TimelineViewNew({ schedules = [], mediaMap = {}, onMarkC
   // Check for delayed schedules
   const delayedSchedules = useMemo(() => {
     const today = startOfDay(new Date());
-    return schedules.filter(schedule => {
+    return validSchedules.filter(schedule => {
       if (schedule.status === 'completed') return false;
-      if (!schedule.scheduled_date) return false;
-
-      const dateObj = new Date(schedule.scheduled_date);
-      if (isNaN(dateObj.getTime())) return false;
-
-      const scheduleDate = startOfDay(dateObj);
+      // Already sanitized
+      const scheduleDate = startOfDay(new Date(schedule.scheduled_date));
       return isBefore(scheduleDate, today);
     }).map(schedule => ({
       ...schedule,
       media: mediaMap[schedule.media_id]
     }));
-  }, [schedules, mediaMap]);
+  }, [validSchedules, mediaMap]);
 
   // Group by time of day
   const groupedByTimeOfDay = useMemo(() => {

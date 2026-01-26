@@ -96,75 +96,67 @@ export default function AppHeader({ scheduleCount = 0, historyCount = 0, userRol
           </nav>
 
 
-          {/* Join Party Button */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent('open-join-party'))}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 border border-purple-500/20 text-purple-400 text-xs font-semibold transition-all"
-            >
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Join Party</span>
-            </button>
+          {/* Join Party Button Removed */}
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg text-white hover:bg-zinc-800 transition-colors"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 rounded-lg text-white hover:bg-zinc-800 transition-colors"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
+      </div>
 
-        {/* Mobile Navigation Dropdown */}
-        {mobileMenuOpen && (
-          <nav className="lg:hidden border-t border-zinc-700/50 py-2 max-h-[calc(100vh-3.5rem)] overflow-y-auto">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = item.view ? currentView === item.view : (item.page?.toLowerCase() === currentView?.toLowerCase());
+      {/* Mobile Navigation Dropdown */}
+      {mobileMenuOpen && (
+        <nav className="lg:hidden border-t border-zinc-700/50 py-2 max-h-[calc(100vh-3.5rem)] overflow-y-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = item.view ? currentView === item.view : (item.page?.toLowerCase() === currentView?.toLowerCase());
 
-              return (
-                <button
-                  key={item.name}
-                  onClick={() => {
-                    if (item.action === 'logout') {
-                      base44.auth.logout();
-                      return;
-                    }
-                    if (item.page) {
-                      navigate(createPageUrl(item.page));
-                    } else {
-                      onViewChange?.(item.view);
-                    }
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`
+            return (
+              <button
+                key={item.name}
+                onClick={() => {
+                  if (item.action === 'logout') {
+                    base44.auth.logout();
+                    return;
+                  }
+                  if (item.page) {
+                    navigate(createPageUrl(item.page));
+                  } else {
+                    onViewChange?.(item.view);
+                  }
+                  setMobileMenuOpen(false);
+                }}
+                className={`
                     w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-all
                     ${active
-                      ? 'bg-gradient-to-r from-purple-500 to-emerald-500 text-white'
-                      : item.adminOnly
-                        ? 'text-purple-400 hover:bg-zinc-800/80 border-l-2 border-purple-500/50'
-                        : item.view === 'profile'
-                          ? 'text-green-400 hover:bg-zinc-800/80'
-                          : 'text-zinc-400 hover:text-white hover:bg-zinc-800/80'
-                    }
+                    ? 'bg-gradient-to-r from-purple-500 to-emerald-500 text-white'
+                    : item.adminOnly
+                      ? 'text-purple-400 hover:bg-zinc-800/80 border-l-2 border-purple-500/50'
+                      : item.view === 'profile'
+                        ? 'text-green-400 hover:bg-zinc-800/80'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800/80'
+                  }
                   `}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="flex-1 text-left">{item.name}</span>
-                  {item.badge > 0 && (
-                    <span
-                      className={`${item.badgeColor} text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[24px] flex items-center justify-center`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-        )}
-      </div>
-    </header>
+              >
+                <Icon className="w-5 h-5" />
+                <span className="flex-1 text-left">{item.name}</span>
+                {item.badge > 0 && (
+                  <span
+                    className={`${item.badgeColor} text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[24px] flex items-center justify-center`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      )}
+    </div>
+    </header >
   );
 }

@@ -40,7 +40,7 @@ import AchievementsView from "@/components/achievements/AchievementsView";
 import PDFViewer from "@/components/books/PDFViewer";
 import IllustratedBookReader from "@/components/books/IllustratedBookReader";
 import FloatingBubbles from "@/components/home/FloatingBubbles";
-import JoinWatchParty from "@/components/watch-party/JoinWatchParty";
+import WatchPartyDashboard from "@/components/watch-party/WatchPartyDashboard";
 import AdminSpace from "./AdminSpace";
 import Spending from "./Spending";
 
@@ -2796,34 +2796,7 @@ export default function Home() {
       )}
 
       {/* Watch Party Coming Soon Modal */}
-      <Dialog open={showWatchPartyModal} onOpenChange={setShowWatchPartyModal}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-white sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <Users className="w-6 h-6 text-purple-500" />
-              Watch Parties
-            </DialogTitle>
-            <DialogDescription className="text-zinc-400 pt-2 text-base">
-              This feature is currently under development. Experience shared viewing with friends coming soon!
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 flex justify-center">
-            <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center animate-pulse">
-              <Users className="w-10 h-10 text-zinc-600" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              onClick={() => setShowWatchPartyModal(false)}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-            >
-              Understood, can't wait!
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <JoinWatchParty open={showJoinPartyModal} onClose={() => setShowJoinPartyModal(false)} />
+      <WatchPartyDashboard open={showWatchPartyModal} onClose={() => setShowWatchPartyModal(false)} />
 
       <Footer lastLibraryUpdate={lastLibraryUpdate} />
     </div >

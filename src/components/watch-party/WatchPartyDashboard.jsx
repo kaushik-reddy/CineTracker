@@ -1,47 +1,57 @@
-
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Users, Plus, Search, Calendar, Clock } from "lucide-react";
-import CreateWatchParty from './CreateWatchParty';
-import JoinWatchParty from './JoinWatchParty';
-import WatchPartyPlayer from './WatchPartyPlayer';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from "@/api/base44Client";
+import { Trash2, AlertCircle } from "lucide-react";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function WatchPartyDashboard({ open, onClose }) {
     const [showCreate, setShowCreate] = useState(false);
     const [showJoin, setShowJoin] = useState(false);
     const [selectedParty, setSelectedParty] = useState(null);
+    const [currentUser, setCurrentUser] = useState(null);
+    const queryClient = useQueryClient();
+
+    // Get current user
+    React.useEffect(() => {
+        base44.auth.me().then(setCurrentUser);
+    }, []);
 
     // Fetch user's parties
     const { data: parties = [] } = useQuery({
         queryKey: ['my-watch-parties'],
         queryFn: async () => {
-            const user = await base44.auth.me();
-            // Fetch parties where user is participant or host
-            // Since filtering by array content might be limited in mock, we fetch all and filter in JS if needed
-            // But let's try to filter by something if possible.
-            // For now, let's fetch all active parties and filter client side
+            if (!currentUser) return [];
             const allParties = await base44.entities.WatchParty.filter({
                 status: { $in: ['scheduled', 'live'] }
             });
 
             return allParties.filter(p =>
-                p.host_email === user.email ||
-                p.participants?.some(part => part.email === user.email)
+                p.host_email === currentUser.email ||
+                p.participants?.some(part => part.email === currentUser.email)
             ).sort((a, b) => new Date(a.scheduled_start) - new Date(b.scheduled_start));
         },
-        enabled: open
+        enabled: open && !!currentUser
     });
+
+    const deletePartyMutation = useMutation({
+        mutationFn: (id) => base44.entities.WatchParty.delete(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['my-watch-parties'] });
+        }
+    });
+
+    const handleDelete = async (e, partyId) => {
+        e.stopPropagation();
+        if (confirm('Are you sure you want to delete this watch party?')) {
+            await deletePartyMutation.mutateAsync(partyId);
+        }
+    };
 
     const handleCreateClose = () => {
         setShowCreate(false);
-        // onClose(); // Optional: close dashboard? No, keep it open.
+        queryClient.invalidateQueries({ queryKey: ['my-watch-parties'] });
     };
 
     const handleJoinClose = () => {
         setShowJoin(false);
+        queryClient.invalidateQueries({ queryKey: ['my-watch-parties'] });
     };
 
     return (
@@ -91,11 +101,10 @@ export default function WatchPartyDashboard({ open, onClose }) {
                                     {parties.map(party => (
                                         <div
                                             key={party.id}
-                                            className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 hover:border-purple-500/50 transition-all cursor-pointer group"
-                                            onClick={() => setSelectedParty(party)}
+                                            className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 hover:border-purple-500/50 transition-all cursor-pointer group relative"
                                         >
                                             <div className="flex items-start justify-between mb-3">
-                                                <div>
+                                                <div onClick={() => setSelectedParty(party)} className="flex-1">
                                                     <h4 className="font-bold text-white group-hover:text-purple-400 transition-colors">
                                                         {party.party_name}
                                                     </h4>
@@ -103,14 +112,26 @@ export default function WatchPartyDashboard({ open, onClose }) {
                                                         {new Date(party.scheduled_start).toLocaleDateString()}
                                                     </p>
                                                 </div>
-                                                {party.status === 'live' && (
-                                                    <div className="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-full animate-pulse">
-                                                        LIVE
-                                                    </div>
-                                                )}
+                                                <div className="flex items-center gap-2">
+                                                    {party.status === 'live' && (
+                                                        <div className="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-full animate-pulse">
+                                                            LIVE
+                                                        </div>
+                                                    )}
+                                                    {/* Delete Button for Host */}
+                                                    {currentUser?.email === party.host_email && (
+                                                        <button
+                                                            onClick={(e) => handleDelete(e, party.id)}
+                                                            className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors ml-2"
+                                                            title="Delete Party"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
 
-                                            <div className="flex items-center gap-4 text-sm text-zinc-500">
+                                            <div className="flex items-center gap-4 text-sm text-zinc-500" onClick={() => setSelectedParty(party)}>
                                                 <div className="flex items-center gap-1">
                                                     <Clock className="w-4 h-4" />
                                                     {new Date(party.scheduled_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -120,6 +141,15 @@ export default function WatchPartyDashboard({ open, onClose }) {
                                                     {party.participants?.length || 0} / {party.max_participants}
                                                 </div>
                                             </div>
+
+                                            {/* Open button matching reference */}
+                                            <Button
+                                                className="w-full mt-4 bg-gradient-to-r from-purple-500 to-emerald-500 hover:opacity-90"
+                                                onClick={() => setSelectedParty(party)}
+                                            >
+                                                <Play className="w-4 h-4 mr-2" fill="currentColor" />
+                                                Open
+                                            </Button>
                                         </div>
                                     ))}
                                 </div>
@@ -151,12 +181,34 @@ export default function WatchPartyDashboard({ open, onClose }) {
 
 // Helper to fetch media before opening player
 function WatchPartyDashboardPlayerWrapper({ party, onClose }) {
-    const { data: media } = useQuery({
+    const { data: media, isLoading, isError } = useQuery({
         queryKey: ['media', party.media_id],
         queryFn: () => base44.entities.Media.get(party.media_id)
     });
 
-    if (!media) return null;
+    if (isLoading) {
+        return (
+            <Dialog open={true} onOpenChange={onClose}>
+                <DialogContent className="bg-black border-zinc-800 text-white max-w-sm p-8 flex flex-col items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mb-4" />
+                    <p className="text-zinc-400">Loading Watch Party...</p>
+                </DialogContent>
+            </Dialog>
+        );
+    }
+
+    if (isError || !media) {
+        return (
+            <Dialog open={true} onOpenChange={onClose}>
+                <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-sm p-6 text-center">
+                    <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold mb-2">Failed to load</h3>
+                    <p className="text-zinc-400 mb-6">Could not load the media for this party.</p>
+                    <Button onClick={onClose} variant="secondary" className="w-full">Close</Button>
+                </DialogContent>
+            </Dialog>
+        );
+    }
 
     return (
         <WatchPartyPlayer

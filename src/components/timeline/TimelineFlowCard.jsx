@@ -29,16 +29,16 @@ const platformColors = {
   "Other": "bg-gray-500"
 };
 
-export default function TimelineFlowCard({ 
-  schedule, 
-  media, 
-  onMarkComplete, 
-  onReschedule, 
+export default function TimelineFlowCard({
+  schedule,
+  media,
+  onMarkComplete,
+  onReschedule,
   localElapsed,
   userRole,
   userPermissions,
   isHighlighted,
-  onNavigate 
+  onNavigate
 }) {
   if (!media) return null;
 
@@ -62,11 +62,11 @@ export default function TimelineFlowCard({
   // Time calculations
   const scheduledTime = new Date(schedule.scheduled_date);
   const startedTime = schedule.started_at ? new Date(schedule.started_at) : null;
-  const completedTime = schedule.rating_submitted_at 
-    ? new Date(schedule.rating_submitted_at) 
-    : schedule.status === 'completed' 
-    ? new Date(schedule.updated_date) 
-    : null;
+  const completedTime = schedule.rating_submitted_at
+    ? new Date(schedule.rating_submitted_at)
+    : schedule.status === 'completed'
+      ? new Date(schedule.updated_date)
+      : null;
 
   // Calculate total time spent (actual elapsed time including breaks)
   let totalTimeSpent = null;
@@ -74,7 +74,7 @@ export default function TimelineFlowCard({
   if (startedTime && completedTime) {
     const actualMinutes = differenceInMinutes(completedTime, startedTime);
     totalTimeSpent = actualMinutes;
-    
+
     // Calculate overrun
     if (actualMinutes > runtime) {
       timeOverrun = actualMinutes - runtime;
@@ -100,15 +100,15 @@ export default function TimelineFlowCard({
             {/* Left: Poster & Title */}
             <div className="flex gap-2 lg:w-56 flex-shrink-0">
               {media.poster_url && (
-                <img 
-                  src={media.poster_url} 
+                <img
+                  src={media.poster_url}
                   alt={media.title}
                   className="w-20 h-28 object-cover rounded-lg border border-zinc-700 flex-shrink-0"
                 />
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-0.5">
-                  <h4 
+                  <h4
                     className="text-white font-bold text-xs lg:text-sm truncate cursor-pointer hover:text-amber-400 transition-colors flex-1"
                     onClick={() => onNavigate?.(media.id)}
                   >
@@ -145,6 +145,24 @@ export default function TimelineFlowCard({
                       )}
                     </span>
                   )}
+                  {schedule.is_watch_party && (
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[9px] font-bold rounded shadow-lg shadow-purple-900/20 animate-pulse">
+                        WATCH PARTY
+                      </span>
+                      {schedule.party_data && (
+                        <span className="text-zinc-400">
+                          Host: <span className="text-white">
+                            {(() => {
+                              const hostEmail = schedule.party_data.host_email;
+                              const host = schedule.party_data.participants?.find(p => p.email === hostEmail);
+                              return host?.name || hostEmail?.split('@')[0] || 'Unknown';
+                            })()}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {media.platform && (
                   <div className="mt-1 flex items-center gap-1 flex-wrap">
@@ -171,18 +189,15 @@ export default function TimelineFlowCard({
               <div className="relative flex items-center justify-between mb-2 px-2">
                 {/* Scheduled */}
                 <div className="flex flex-col items-center z-10 flex-1">
-                  <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center border-2 transition-all ${
-                    isScheduled || isStarted || isCompleted
-                      ? 'bg-gradient-to-br from-purple-500 to-emerald-500 border-purple-500 shadow-lg'
-                      : 'bg-zinc-800 border-zinc-600'
-                  }`}>
-                    <Calendar className={`w-4 h-4 lg:w-5 lg:h-5 ${
-                      isScheduled || isStarted || isCompleted ? 'text-white' : 'text-zinc-500'
-                    }`} />
+                  <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center border-2 transition-all ${isScheduled || isStarted || isCompleted
+                    ? 'bg-gradient-to-br from-purple-500 to-emerald-500 border-purple-500 shadow-lg'
+                    : 'bg-zinc-800 border-zinc-600'
+                    }`}>
+                    <Calendar className={`w-4 h-4 lg:w-5 lg:h-5 ${isScheduled || isStarted || isCompleted ? 'text-white' : 'text-zinc-500'
+                      }`} />
                   </div>
-                  <span className={`text-[10px] lg:text-xs font-semibold mt-1 ${
-                    isScheduled || isStarted || isCompleted ? 'text-white' : 'text-zinc-500'
-                  }`}>
+                  <span className={`text-[10px] lg:text-xs font-semibold mt-1 ${isScheduled || isStarted || isCompleted ? 'text-white' : 'text-zinc-500'
+                    }`}>
                     Scheduled
                   </span>
                   <div className="mt-2 text-center">
@@ -194,39 +209,35 @@ export default function TimelineFlowCard({
                 </div>
 
                 {/* Connection Line 1 */}
-                <div className={`flex-1 h-0.5 mx-1 transition-all ${
-                  isStarted || isCompleted
-                    ? 'bg-gradient-to-r from-purple-500 to-emerald-500'
-                    : 'bg-zinc-700'
-                }`} />
+                <div className={`flex-1 h-0.5 mx-1 transition-all ${isStarted || isCompleted
+                  ? 'bg-gradient-to-r from-purple-500 to-emerald-500'
+                  : 'bg-zinc-700'
+                  }`} />
 
                 {/* Started */}
                 <div className="flex flex-col items-center z-10 flex-1">
-                  <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center border-2 transition-all ${
-                    schedule.status === 'in_progress'
-                      ? 'bg-gradient-to-br from-emerald-500 to-emerald-400 border-emerald-500 shadow-lg'
-                      : schedule.status === 'paused'
+                  <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center border-2 transition-all ${schedule.status === 'in_progress'
+                    ? 'bg-gradient-to-br from-emerald-500 to-emerald-400 border-emerald-500 shadow-lg'
+                    : schedule.status === 'paused'
                       ? 'bg-gradient-to-br from-amber-500 to-amber-400 border-amber-500 shadow-lg'
                       : isStarted || isCompleted
-                      ? 'bg-gradient-to-br from-emerald-500 to-amber-500 border-emerald-500 shadow-lg'
-                      : 'bg-zinc-800 border-zinc-600'
-                  }`}>
+                        ? 'bg-gradient-to-br from-emerald-500 to-amber-500 border-emerald-500 shadow-lg'
+                        : 'bg-zinc-800 border-zinc-600'
+                    }`}>
                     {schedule.status === 'paused' ? (
                       <Pause className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                     ) : (
-                      <Play className={`w-4 h-4 lg:w-5 lg:h-5 ${
-                        isStarted || isCompleted ? 'text-white' : 'text-zinc-500'
-                      }`} />
+                      <Play className={`w-4 h-4 lg:w-5 lg:h-5 ${isStarted || isCompleted ? 'text-white' : 'text-zinc-500'
+                        }`} />
                     )}
                   </div>
-                  <span className={`text-[10px] lg:text-xs font-semibold mt-1 whitespace-nowrap ${
-                    schedule.status === 'in_progress' ? 'text-emerald-400' :
+                  <span className={`text-[10px] lg:text-xs font-semibold mt-1 whitespace-nowrap ${schedule.status === 'in_progress' ? 'text-emerald-400' :
                     schedule.status === 'paused' ? 'text-amber-400' :
-                    isStarted || isCompleted ? 'text-white' : 'text-zinc-500'
-                  }`}>
+                      isStarted || isCompleted ? 'text-white' : 'text-zinc-500'
+                    }`}>
                     {schedule.status === 'in_progress' ? 'Started · Playing' :
-                     schedule.status === 'paused' ? 'Paused' :
-                     'Started'}
+                      schedule.status === 'paused' ? 'Paused' :
+                        'Started'}
                   </span>
                   {startedTime && (
                     <div className="mt-2 text-center">
@@ -239,26 +250,22 @@ export default function TimelineFlowCard({
                 </div>
 
                 {/* Connection Line 2 */}
-                <div className={`flex-1 h-0.5 mx-1 transition-all ${
-                  isCompleted
-                    ? 'bg-gradient-to-r from-emerald-500 to-blue-500'
-                    : 'bg-zinc-700'
-                }`} />
+                <div className={`flex-1 h-0.5 mx-1 transition-all ${isCompleted
+                  ? 'bg-gradient-to-r from-emerald-500 to-blue-500'
+                  : 'bg-zinc-700'
+                  }`} />
 
                 {/* Completed */}
                 <div className="flex flex-col items-center z-10 flex-1">
-                  <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center border-2 transition-all ${
-                    isCompleted
-                      ? 'bg-gradient-to-br from-blue-500 to-purple-500 border-blue-500 shadow-lg'
-                      : 'bg-zinc-800 border-zinc-600'
-                  }`}>
-                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${
-                      isCompleted ? 'text-white' : 'text-zinc-500'
-                    }`} />
+                  <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center border-2 transition-all ${isCompleted
+                    ? 'bg-gradient-to-br from-blue-500 to-purple-500 border-blue-500 shadow-lg'
+                    : 'bg-zinc-800 border-zinc-600'
+                    }`}>
+                    <CheckCircle className={`w-4 h-4 lg:w-5 lg:h-5 ${isCompleted ? 'text-white' : 'text-zinc-500'
+                      }`} />
                   </div>
-                  <span className={`text-[10px] lg:text-xs font-semibold mt-1 ${
-                    isCompleted ? 'text-white' : 'text-zinc-500'
-                  }`}>
+                  <span className={`text-[10px] lg:text-xs font-semibold mt-1 ${isCompleted ? 'text-white' : 'text-zinc-500'
+                    }`}>
                     Completed
                   </span>
                   {completedTime && (
@@ -318,28 +325,41 @@ export default function TimelineFlowCard({
               {/* Action buttons for non-completed items */}
               {schedule.status !== 'completed' && (
                 <div className="flex gap-1.5 mt-2">
-                  <Button
-                    size="sm"
-                    disabled={!canMarkComplete}
-                    onClick={() => canMarkComplete && onMarkComplete(schedule)}
-                    className={`flex-1 text-[10px] px-2 py-1.5 h-auto ${
-                      !canMarkComplete 
-                        ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50' 
-                        : 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                    }`}
-                  >
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    Complete
-                  </Button>
+                  {schedule.is_watch_party ? (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent('open-watch-party-player', {
+                          detail: { party: schedule.party_data }
+                        }));
+                      }}
+                      className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-auto py-1.5 text-[10px] font-bold shadow-lg shadow-purple-900/20"
+                    >
+                      <Users className="w-3 h-3 mr-1" />
+                      Join Party
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      disabled={!canMarkComplete}
+                      onClick={() => canMarkComplete && onMarkComplete(schedule)}
+                      className={`flex-1 text-[10px] px-2 py-1.5 h-auto ${!canMarkComplete
+                          ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50'
+                          : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                        }`}
+                    >
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Complete
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     disabled={!canEdit}
                     onClick={() => canEdit && onReschedule(schedule, false)}
-                    className={`flex-1 text-[10px] px-2 py-1.5 h-auto ${
-                      !canEdit 
-                        ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50 border-zinc-700' 
+                    className={`flex-1 text-[10px] px-2 py-1.5 h-auto ${!canEdit
+                        ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50 border-zinc-700'
                         : 'bg-white hover:bg-zinc-100 text-black'
-                    }`}
+                      }`}
                   >
                     <RotateCcw className="w-3 h-3 mr-1" />
                     Reschedule

@@ -921,6 +921,13 @@ export default function Home() {
       return;
     }
 
+    if (schedule.is_watch_party) {
+      window.dispatchEvent(new CustomEvent('open-watch-party-player', {
+        detail: { party: schedule.party_data }
+      }));
+      return;
+    }
+
     if (playingScheduleId === schedule.id) {
       // Pause
       await updateScheduleMutation.mutateAsync({

@@ -18,6 +18,16 @@ export default function WatchPartyDashboard({ open, onClose }) {
     // Get current user
     React.useEffect(() => {
         base44.auth.me().then(setCurrentUser);
+
+        const handleOpenParty = (e) => {
+            const party = e.detail?.party;
+            if (party) {
+                setSelectedParty(party);
+            }
+        };
+
+        window.addEventListener('open-watch-party-player', handleOpenParty);
+        return () => window.removeEventListener('open-watch-party-player', handleOpenParty);
     }, []);
 
     // Fetch user's parties

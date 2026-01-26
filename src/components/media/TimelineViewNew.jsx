@@ -53,7 +53,17 @@ const getTimeOfDay = (date) => {
   return { label: 'LATE NIGHT', color: 'text-zinc-400' };
 };
 
-export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, onReschedule, localElapsed, userRole, userPermissions, playingScheduleId, isHighlighted, onNavigate }) {
+export default function TimelineViewNew({ schedules = [], mediaMap = {}, onMarkComplete, onReschedule, localElapsed = {}, userRole, userPermissions, playingScheduleId, isHighlighted, onNavigate }) {
+  // Sanitize schedules to prevent crashes
+  const validSchedules = useMemo(() => {
+    if (!Array.isArray(schedules)) return [];
+    return schedules.filter(s => {
+      if (!s || !s.scheduled_date) return false;
+      const date = new Date(s.scheduled_date);
+      return !isNaN(date.getTime());
+    });
+  }, [schedules]);
+
   const canMarkComplete = userRole === 'admin' || userPermissions?.can_mark_complete;
   const canEdit = userRole === 'admin' || userPermissions?.can_edit;
   const [rescheduleDialog, setRescheduleDialog] = useState(null);

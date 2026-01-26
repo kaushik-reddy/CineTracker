@@ -50,7 +50,7 @@ export default function AppHeader({ scheduleCount = 0, historyCount = 0, userRol
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-2">
+          <nav className="hidden lg:flex items-center gap-2 ml-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = item.view ? currentView === item.view : (item.page?.toLowerCase() === currentView?.toLowerCase());
@@ -95,14 +95,11 @@ export default function AppHeader({ scheduleCount = 0, historyCount = 0, userRol
             })}
           </nav>
 
-
-          {/* Join Party Button Removed */}
-
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 lg:hidden ml-auto">
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg text-white hover:bg-zinc-800 transition-colors"
+              className="p-2 rounded-lg text-white hover:bg-zinc-800 transition-colors"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>

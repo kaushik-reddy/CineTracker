@@ -320,12 +320,17 @@ export default function Home() {
   });
 
   // Real-time sync for watch parties
+  // Real-time sync for watch parties
   useRealTimeSubscription('WatchParty', {
     enabled: !!user,
-  }, (payload) => {
+  }, async (payload) => {
     console.log('Real-time update received (Party):', payload);
-    queryClient.invalidateQueries({ queryKey: ['schedules'] });
-    queryClient.invalidateQueries({ queryKey: ['media'] });
+    // Invalidate generic and user-specific queries
+    await queryClient.invalidateQueries({ queryKey: ['schedules'] });
+    await queryClient.invalidateQueries({ queryKey: ['media'] });
+
+    // Force immediate refetch for active views
+    await queryClient.refetchQueries({ queryKey: ['schedules'] });
   });
 
 

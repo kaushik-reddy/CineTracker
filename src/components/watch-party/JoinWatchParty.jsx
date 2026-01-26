@@ -30,16 +30,28 @@ export default function JoinWatchParty({ open, onClose }) {
         }
 
         await executeAction('Searching Party', async () => {
+            // Normalize input: remove spaces, ensure uppercase
+            let normalizedCode = inviteCode.toUpperCase().replace(/\s/g, '');
+
+            // Add prefix if missing (optional enhancement, but safe)
+            if (!normalizedCode.startsWith('CT-') && normalizedCode.length === 6) {
+                normalizedCode = 'CT-' + normalizedCode;
+            }
+
+            // Simple filter first
             const parties = await base44.entities.WatchParty.filter({
-                invite_code: inviteCode.toUpperCase().replace(/\s/g, ''),
-                status: { $in: ['scheduled', 'live'] }
+                invite_code: normalizedCode
             });
 
             if (parties.length === 0) {
-                throw new Error('Party not found or has ended');
+                throw new Error('Party not found');
             }
 
-            const party = parties[0];
+            const party = parties.find(p => ['scheduled', 'live'].includes(p.status));
+
+            if (!party) {
+                throw new Error('Party has ended or is not active');
+            }
 
             // Check if party is full
             if (party.participants?.length >= party.max_participants) {

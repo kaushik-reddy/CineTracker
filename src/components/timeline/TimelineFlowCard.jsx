@@ -158,8 +158,8 @@ export default function TimelineFlowCard({
                         <span className="text-zinc-400">
                           Host: <span className="text-white">
                             {(() => {
-                              const hostEmail = schedule.party_data.host_email;
-                              const host = schedule.party_data.participants?.find(p => p.email === hostEmail);
+                              const hostEmail = schedule.party_data?.host_email;
+                              const host = schedule.party_data?.participants?.find(p => p.email === hostEmail);
                               return host?.name || hostEmail?.split('@')[0] || 'Unknown';
                             })()}
                           </span>

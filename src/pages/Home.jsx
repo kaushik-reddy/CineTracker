@@ -39,7 +39,7 @@ import PageHelpButton from "@/components/common/PageHelpButton";
 import AchievementsView from "@/components/achievements/AchievementsView";
 import PDFViewer from "@/components/books/PDFViewer";
 import IllustratedBookReader from "@/components/books/IllustratedBookReader";
-import FloatingBubbles from "@/components/home/FloatingBubbles";
+
 import WatchPartyDashboard from "@/components/watch-party/WatchPartyDashboard";
 import AdminSpace from "./AdminSpace";
 import Spending from "./Spending";
@@ -1473,15 +1473,7 @@ export default function Home() {
                   setEditingMedia(data);
                   setShowAddForm(true);
                 }}
-                FloatingBubbles={
-                  <FloatingBubbles
-                    aiRecommendations={[]}
-                    movieNews={[]}
-                    mediaMap={mediaMap}
-                    onSchedule={setScheduleMedia}
-                    canSchedule={true}
-                  />
-                } />
+              />
 
             </motion.div> :
             view === 'library' ?

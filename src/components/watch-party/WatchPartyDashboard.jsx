@@ -218,11 +218,51 @@ function WatchPartyDashboardPlayerWrapper({ party, onClose }) {
     }
 
     return (
-        <WatchPartyPlayer
-            open={true}
-            onClose={onClose}
-            party={party}
-            media={media}
-        />
+        <ErrorBoundary onClose={onClose}>
+            <WatchPartyPlayer
+                open={true}
+                onClose={onClose}
+                party={party}
+                media={media}
+            />
+        </ErrorBoundary>
     );
+}
+
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error("WatchPartyPlayer Error:", error, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <Dialog open={true} onOpenChange={this.props.onClose}>
+                    <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-md p-6">
+                        <div className="flex flex-col items-center text-center">
+                            <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+                            <h3 className="text-lg font-bold mb-2">Something went wrong</h3>
+                            <p className="text-zinc-400 text-sm mb-4">
+                                {this.state.error?.message || "An unexpected error occurred in the player."}
+                            </p>
+                            <Button onClick={this.props.onClose} variant="secondary" className="w-full">
+                                Close
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            );
+        }
+
+        return this.props.children;
+    }
 }

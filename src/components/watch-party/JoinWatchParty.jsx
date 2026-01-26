@@ -119,16 +119,37 @@ export default function JoinWatchParty({ open, onClose }) {
                     participants: updatedParticipants
                 });
 
+                // Create personal schedule for the guest if it doesn't exist
+                const existing = await base44.entities.WatchSchedule.filter({
+                    created_by: user.email,
+                    media_id: foundParty.media_id,
+                    status: ['scheduled', 'in_progress', 'paused']
+                });
+
+                if (existing.length === 0) {
+                    await base44.entities.WatchSchedule.create({
+                        created_by: user.email,
+                        media_id: foundParty.media_id,
+                        status: 'scheduled',
+                        scheduled_date: foundParty.scheduled_start,
+                        is_watch_party: true,
+                        shared_party_id: foundParty.id,
+                        viewers: [{
+                            user_id: user.id,
+                            name: user.full_name,
+                            email: user.email
+                        }]
+                    });
+                }
+
                 setShowPlayer(true);
             } else {
-                // Manual approval: add to join requests
+                // Manual approval logic... (Schedule will be created in WatchPartyPlayer when they actually join/open after approval)
+                // OR we can create it here as "pending"
                 const joinRequests = foundParty.join_requests || [];
-
-                // Check if already requested
                 if (joinRequests.some(r => r.user_id === user.id)) {
                     throw new Error('Join request already sent');
                 }
-
                 joinRequests.push({
                     user_id: user.id,
                     name: user.full_name,
@@ -136,11 +157,9 @@ export default function JoinWatchParty({ open, onClose }) {
                     avatar: user.profile_picture || '',
                     requested_at: new Date().toISOString()
                 });
-
                 await base44.entities.WatchParty.update(foundParty.id, {
                     join_requests: joinRequests
                 });
-
                 setRequestSent(true);
             }
         }, {

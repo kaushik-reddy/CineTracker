@@ -377,7 +377,13 @@ export default function Home() {
         viewers: p.participants || []
       }));
 
-      const allItems = [...combined, ...partySchedules];
+      // Filter out personal schedules that are redundant because there's an active party mapping
+      const activePartyScheduleIds = partySchedules.map(p => p.party_data?.id);
+      const filteredPersonal = combined.filter(s =>
+        !(s.is_watch_party && activePartyScheduleIds.includes(s.shared_party_id))
+      );
+
+      const allItems = [...filteredPersonal, ...partySchedules];
       const uniqueSchedules = Array.from(new Map(allItems.map(s => [s.id, s])).values());
 
       return uniqueSchedules.sort((a, b) => new Date(b.scheduled_date) - new Date(a.scheduled_date));

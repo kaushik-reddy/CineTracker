@@ -21,6 +21,9 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
     const syncIntervalRef = useRef(null);
     const chatEndRef = useRef(null);
     const [currentUser, setCurrentUser] = useState(null);
+    const [showRating, setShowRating] = useState(false);
+    const [userRating, setUserRating] = useState(0);
+    const [hasRated, setHasRated] = useState(false);
 
     const totalSeconds = (media?.runtime_minutes || 0) * 60;
     const isHost = currentUser?.email === party?.host_email;
@@ -57,6 +60,35 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
                     timestamp: new Date().toISOString()
                 });
             }
+
+            // Also ensure a personal WatchSchedule exists for the guest/host
+            const existing = await base44.entities.WatchSchedule.filter({
+                created_by: user.email,
+                media_id: party.media_id,
+                status: ['scheduled', 'in_progress', 'paused']
+            });
+
+            if (existing.length === 0) {
+                // If it's a guest joined later, create it now
+                await base44.entities.WatchSchedule.create({
+                    created_by: user.email,
+                    media_id: party.media_id,
+                    status: 'in_progress',
+                    scheduled_date: party.scheduled_start,
+                    is_watch_party: true,
+                    shared_party_id: party.id,
+                    viewers: [{
+                        user_id: user.id,
+                        name: user.full_name,
+                        email: user.email
+                    }]
+                });
+            } else if (!isHost) {
+                // For guests, update their personal schedule to in_progress when they enter
+                await base44.entities.WatchSchedule.update(existing[0].id, {
+                    status: 'in_progress'
+                });
+            }
         };
 
         init();
@@ -89,6 +121,14 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
                         }
 
                         lastPartyData = partyData;
+
+                        // NEW: Detect if party ended to show rating
+                        if (partyData.status === 'ended' || partyData.status === 'completed') {
+                            if (!hasRated) {
+                                setShowRating(true);
+                                setIsPlaying(false);
+                            }
+                        }
                     }
                 }
 
@@ -256,6 +296,41 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
         }, {
             successTitle: 'Request Rejected',
             successSubtitle: `${request.name}'s request was declined`
+        });
+    };
+
+    const submitRating = async () => {
+        if (userRating === 0) return;
+
+        executeAction('Saving Rating', async () => {
+            setHasRated(true);
+            const now = new Date().toISOString();
+
+            // Find personal schedule
+            const schedules = await base44.entities.WatchSchedule.filter({
+                created_by: currentUser.email,
+                media_id: party.media_id,
+                status: ['scheduled', 'in_progress', 'paused']
+            });
+
+            if (schedules.length > 0) {
+                await base44.entities.WatchSchedule.update(schedules[0].id, {
+                    status: 'completed',
+                    rating: userRating,
+                    rating_submitted_at: now,
+                    elapsed_seconds: currentTime
+                });
+            }
+
+            setShowRating(false);
+
+            // If they are a guest, they can now leave
+            if (!isHost) {
+                onClose();
+            }
+        }, {
+            successTitle: 'Rating Saved!',
+            successSubtitle: 'Added to your history'
         });
     };
 
@@ -568,6 +643,57 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
                         </div>
                     </div>
                 </div>
+
+                {/* Rating Overlay */}
+                <AnimatePresence>
+                    {showRating && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 z-50 bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center"
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                className="max-w-sm w-full space-y-6"
+                            >
+                                <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                                    <CheckCircle className="w-10 h-10 text-emerald-500" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-3xl font-bold text-white">Party Finished!</h2>
+                                    <p className="text-zinc-400">Hope you enjoyed watching "{media.title}". How would you rate it?</p>
+                                </div>
+
+                                <div className="flex justify-center gap-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            onClick={() => setUserRating(star)}
+                                            className={`w-12 h-12 rounded-xl border-2 transition-all flex items-center justify-center text-xl font-bold ${userRating >= star
+                                                ? 'bg-amber-500 border-amber-500 text-black shadow-lg shadow-amber-900/40'
+                                                : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                                                }`}
+                                        >
+                                            {star}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <Button
+                                    onClick={submitRating}
+                                    disabled={userRating === 0}
+                                    className="w-full h-12 text-lg bg-gradient-to-r from-emerald-500 to-purple-500 hover:opacity-90 disabled:opacity-50"
+                                >
+                                    Save to My History
+                                </Button>
+
+                                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold pt-4">This session is now isolated in your personal history</p>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </DialogContent>
         </Dialog>
     );

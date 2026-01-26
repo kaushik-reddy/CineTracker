@@ -136,9 +136,7 @@ export default function Home() {
   }, [user, preferencesApplied]);
 
   // Join Watch Party state
-  const [showJoinPartyModal, setShowJoinPartyModal] = useState(false);
-
-  // Listen for view navigation events and Join Party events
+  // Listen for view navigation events
   useEffect(() => {
     const handleNavigateToView = (e) => {
       const { view: targetView } = e.detail;
@@ -147,14 +145,10 @@ export default function Home() {
       }
     };
 
-    const handleOpenJoinParty = () => setShowJoinPartyModal(true);
-
     window.addEventListener('navigate-to-view', handleNavigateToView);
-    window.addEventListener('open-join-party', handleOpenJoinParty);
 
     return () => {
       window.removeEventListener('navigate-to-view', handleNavigateToView);
-      window.removeEventListener('open-join-party', handleOpenJoinParty);
     };
   }, []);
 

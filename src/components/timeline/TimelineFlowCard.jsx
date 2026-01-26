@@ -137,12 +137,17 @@ export default function TimelineFlowCard({
                     </span>
                   )}
                   {schedule.is_watch_party && (
-                    <div className="mt-1 flex items-center gap-2">
-                      <span className="px-1.5 py-0.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[9px] font-bold rounded shadow-lg shadow-purple-900/20 animate-pulse">
-                        WATCH PARTY
-                      </span>
+                    <div className="mt-1 flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="px-1.5 py-0.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[9px] font-bold rounded shadow-lg shadow-purple-900/20 animate-pulse">
+                          WATCH PARTY
+                        </span>
+                        <div className="px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded text-amber-500 font-mono text-[9px] flex items-center gap-1">
+                          Code: <span className="font-bold select-all">{schedule.party_data?.invite_code || 'N/A'}</span>
+                        </div>
+                      </div>
                       {schedule.party_data && (
-                        <span className="text-zinc-400">
+                        <span className="text-zinc-400 text-[9px]">
                           Host: <span className="text-white">
                             {(() => {
                               const hostEmail = schedule.party_data?.host_email;

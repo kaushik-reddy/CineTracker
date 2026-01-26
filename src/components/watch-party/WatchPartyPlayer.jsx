@@ -165,6 +165,18 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
         if (isHost) {
             await syncPlayback(currentTime, newState);
 
+            // Sync with WatchSchedule if exists
+            if (party.schedule_id) {
+                try {
+                    await base44.entities.WatchSchedule.update(party.schedule_id, {
+                        status: newState ? 'in_progress' : 'paused',
+                        elapsed_seconds: currentTime
+                    });
+                } catch (e) {
+                    console.error('Schedule sync failed:', e);
+                }
+            }
+
             // System message
             await base44.entities.ChatMessage.create({
                 party_id: party.id,
@@ -247,6 +259,44 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
         });
     };
 
+    const handleCompleteParty = async () => {
+        executeAction('Completing Watch Party', async () => {
+            const now = new Date().toISOString();
+
+            // Update Party
+            await base44.entities.WatchParty.update(party.id, {
+                status: 'ended',
+                is_playing: false,
+                current_time: currentTime,
+                ended_at: now
+            });
+
+            // Update Schedule if exists
+            if (party.schedule_id) {
+                await base44.entities.WatchSchedule.update(party.schedule_id, {
+                    status: 'completed',
+                    rating_submitted_at: now,
+                    elapsed_seconds: currentTime
+                });
+            }
+
+            // System message
+            await base44.entities.ChatMessage.create({
+                party_id: party.id,
+                user_email: 'system',
+                user_name: 'System',
+                message: `Party ended by ${currentUser.full_name}`,
+                message_type: 'system',
+                timestamp: now
+            });
+
+            onClose();
+        }, {
+            successTitle: 'Party Completed!',
+            successSubtitle: 'The session has been saved'
+        });
+    };
+
     const handleQuitParty = async () => {
         try {
             // Only update if not host or if host is leaving (which might end party or just remove them)
@@ -321,13 +371,24 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
                                 </div>
                             </div>
 
-                            <Button
-                                onClick={handleQuitParty}
-                                className="bg-red-600 hover:bg-red-700 text-white border-none shadow-lg shadow-red-900/20 gap-2"
-                            >
-                                <XCircle className="w-4 h-4" />
-                                Leave Party
-                            </Button>
+                            <div className="flex items-center gap-2">
+                                {isHost && (
+                                    <Button
+                                        onClick={handleCompleteParty}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-lg shadow-emerald-900/20 gap-2"
+                                    >
+                                        <CheckCircle className="w-4 h-4" />
+                                        Complete
+                                    </Button>
+                                )}
+                                <Button
+                                    onClick={handleQuitParty}
+                                    className="bg-red-600 hover:bg-red-700 text-white border-none shadow-lg shadow-red-900/20 gap-2"
+                                >
+                                    <XCircle className="w-4 h-4" />
+                                    Leave Party
+                                </Button>
+                            </div>
                         </div>
 
                         {/* Video Content */}

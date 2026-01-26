@@ -37,10 +37,12 @@ export default function WatchPartyDashboard({ open, onClose }) {
             if (!currentUser) return [];
             const allParties = await base44.entities.WatchParty.list();
             // Filter non-ended parties
-            return allParties.filter(p => p.status !== 'ended' && (
-                p.host_email === currentUser.email ||
-                p.participants?.some(part => part.email === currentUser.email)
-            ).sort((a, b) => new Date(a.scheduled_start) - new Date(b.scheduled_start));
+            return allParties
+                .filter(p => p.status !== 'ended' && (
+                    p.host_email === currentUser.email ||
+                    p.participants?.some(part => part.email === currentUser.email)
+                ))
+                .sort((a, b) => new Date(a.scheduled_start) - new Date(b.scheduled_start));
         },
         enabled: open && !!currentUser
     });

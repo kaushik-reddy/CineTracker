@@ -2798,12 +2798,10 @@ export default function Home() {
               </Button>
             </div>
           </DialogContent>
-        </DialogContent>
         </Dialog>
-  )
-}
+      )}
 
-{/* Watch Party Coming Soon Modal */ }
+      {/* Watch Party Coming Soon Modal */}
       <Dialog open={showWatchPartyModal} onOpenChange={setShowWatchPartyModal}>
         <DialogContent className="bg-zinc-900 border-zinc-800 text-white sm:max-w-md">
           <DialogHeader>
@@ -2830,7 +2828,7 @@ export default function Home() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       <JoinWatchParty open={showJoinPartyModal} onClose={() => setShowJoinPartyModal(false)} />
 
       <Footer lastLibraryUpdate={lastLibraryUpdate} />

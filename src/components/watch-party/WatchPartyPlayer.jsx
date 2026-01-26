@@ -411,7 +411,7 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
                                             {p.avatar ? (
                                                 <img src={p.avatar} alt={p.name} className="w-full h-full object-cover" />
                                             ) : (
-                                                <span className="text-xs font-bold text-white">{p.name[0]}</span>
+                                                <span className="text-xs font-bold text-white">{(p.name || '?')[0]}</span>
                                             )}
                                         </div>
                                         {p.email === party.host_email && (
@@ -459,7 +459,7 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
                                             <div className="w-8 h-8 rounded-full bg-zinc-800 flex-shrink-0 flex items-center justify-center text-xs font-bold text-zinc-400 mt-1">
                                                 {msg.user_avatar ? (
                                                     <img src={msg.user_avatar} alt={msg.user_name} className="w-full h-full rounded-full object-cover" />
-                                                ) : msg.user_name[0]}
+                                                ) : (msg.user_name || '?')[0]}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-baseline gap-2 mb-0.5">

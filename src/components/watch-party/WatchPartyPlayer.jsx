@@ -247,8 +247,10 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
         });
     };
 
-    const handleLeave = async () => {
+    const handleQuitParty = async () => {
         try {
+            // Only update if not host or if host is leaving (which might end party or just remove them)
+            // For now, simple remove from participants
             const updatedParticipants = participants.filter(p => p.user_id !== currentUser.id);
             await base44.entities.WatchParty.update(party.id, {
                 participants: updatedParticipants
@@ -270,6 +272,11 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
         }
     };
 
+    const handleClose = () => {
+        // Just close the player, don't leave the party
+        onClose();
+    };
+
     const progress = totalSeconds > 0 ? (currentTime / totalSeconds) * 100 : 0;
 
     const formatTime = (seconds) => {
@@ -288,7 +295,7 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
 
     if (!media) {
         return (
-            <Dialog open={open} onOpenChange={handleLeave}>
+            <Dialog open={open} onOpenChange={handleClose}>
                 <DialogContent className="bg-black border-zinc-800 text-white max-w-md p-8">
                     <div className="text-center">
                         <div className="text-zinc-500 mb-4">Loading media...</div>
@@ -299,7 +306,7 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
     }
 
     return (
-        <Dialog open={open} onOpenChange={handleLeave}>
+        <Dialog open={open} onOpenChange={handleClose}>
             <DialogContent className="bg-black border-zinc-800 text-white max-w-[98vw] w-full h-[95vh] p-0 overflow-hidden flex flex-col gap-0 shadow-2xl">
                 <div className="flex flex-1 overflow-hidden">
                     {/* Main Player Area */}
@@ -315,7 +322,7 @@ export default function WatchPartyPlayer({ open, onClose, party, media }) {
                             </div>
 
                             <Button
-                                onClick={handleLeave}
+                                onClick={handleQuitParty}
                                 className="bg-red-600 hover:bg-red-700 text-white border-none shadow-lg shadow-red-900/20 gap-2"
                             >
                                 <XCircle className="w-4 h-4" />

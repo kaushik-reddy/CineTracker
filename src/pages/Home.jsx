@@ -320,7 +320,30 @@ export default function Home() {
 
       // Combine and deduplicate
       const combined = [...ownSchedules, ...sharedSchedules];
-      const uniqueSchedules = Array.from(new Map(combined.map(s => [s.id, s])).values());
+
+      // Fetch Watch Parties to show in schedule
+      const allParties = await base44.entities.WatchParty.list();
+      const userParties = allParties.filter(p =>
+        (p.host_email === user.email || p.participants?.some(part => part.email === user.email)) &&
+        p.status !== 'ended' // Only show active/scheduled parties
+      );
+
+      // Map parties to schedule format
+      const partySchedules = userParties.map(p => ({
+        id: `party_${p.id}`,
+        media_id: p.media_id,
+        scheduled_date: p.scheduled_start,
+        status: p.status === 'live' ? 'in_progress' : 'scheduled',
+        created_by: p.host_email,
+        is_watch_party: true,
+        party_data: p,
+        // Mock fields to prevent crashes
+        elapsed_seconds: 0,
+        viewers: p.participants || []
+      }));
+
+      const allItems = [...combined, ...partySchedules];
+      const uniqueSchedules = Array.from(new Map(allItems.map(s => [s.id, s])).values());
 
       return uniqueSchedules.sort((a, b) => new Date(b.scheduled_date) - new Date(a.scheduled_date));
     },

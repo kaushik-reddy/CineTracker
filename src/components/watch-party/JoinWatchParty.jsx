@@ -168,9 +168,9 @@ export default function JoinWatchParty({ open, onClose }) {
                                     <Input
                                         value={inviteCode}
                                         onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                                        placeholder="ABC12345"
+                                        placeholder="CT-ABC123"
                                         className="bg-zinc-800 border-zinc-700 text-white mt-2 text-lg font-mono tracking-wider"
-                                        maxLength={8}
+                                        maxLength={12}
                                     />
                                 </div>
 

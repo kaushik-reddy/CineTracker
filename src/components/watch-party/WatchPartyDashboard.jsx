@@ -35,11 +35,9 @@ export default function WatchPartyDashboard({ open, onClose }) {
         queryKey: ['my-watch-parties'],
         queryFn: async () => {
             if (!currentUser) return [];
-            const allParties = await base44.entities.WatchParty.filter({
-                status: { $in: ['scheduled', 'live'] }
-            });
-
-            return allParties.filter(p =>
+            const allParties = await base44.entities.WatchParty.list();
+            // Filter non-ended parties
+            return allParties.filter(p => p.status !== 'ended' && (
                 p.host_email === currentUser.email ||
                 p.participants?.some(part => part.email === currentUser.email)
             ).sort((a, b) => new Date(a.scheduled_start) - new Date(b.scheduled_start));
@@ -59,6 +57,17 @@ export default function WatchPartyDashboard({ open, onClose }) {
         if (confirm('Are you sure you want to delete this watch party?')) {
             await deletePartyMutation.mutateAsync(partyId);
         }
+    };
+
+    const handleCopyCode = async (e, code) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(code);
+        const { showDynamicIslandNotification } = await import('../pwa/DynamicIsland');
+        showDynamicIslandNotification({
+            icon: 'success',
+            title: 'Copied!',
+            message: 'Invite code copied'
+        });
     };
 
     const handleCreateClose = () => {
@@ -125,9 +134,19 @@ export default function WatchPartyDashboard({ open, onClose }) {
                                                     <h4 className="font-bold text-white group-hover:text-purple-400 transition-colors">
                                                         {party.party_name}
                                                     </h4>
-                                                    <p className="text-sm text-zinc-400 mt-1">
-                                                        {new Date(party.scheduled_start).toLocaleDateString()}
-                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <span className="text-xs text-zinc-400">
+                                                            {new Date(party.scheduled_start).toLocaleDateString()}
+                                                        </span>
+                                                        <span className="text-zinc-600">•</span>
+                                                        <button
+                                                            onClick={(e) => handleCopyCode(e, party.invite_code)}
+                                                            className="text-[10px] font-mono text-amber-500/70 hover:text-amber-400 flex items-center gap-1 bg-amber-500/5 px-1.5 py-0.5 rounded border border-amber-500/10"
+                                                        >
+                                                            {party.invite_code}
+                                                            <Plus className="w-2.5 h-2.5 rotate-45" /> {/* Using Plus as a small cross/copy hint or just lucide copy if available */}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     {party.status === 'live' && (

@@ -44,6 +44,7 @@ import WatchPartyDashboard from "@/components/watch-party/WatchPartyDashboard";
 import AdminSpace from "./AdminSpace";
 import Spending from "./Spending";
 
+import { useRealTimeSubscription } from "@/hooks/useRealTimeSubscription";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -298,6 +299,24 @@ export default function Home() {
     if (!mediaList || mediaList.length === 0) return null;
     return mediaList[0]?.created_date; // Already sorted by -created_date
   }, [mediaList]);
+
+  // Real-time sync for schedules
+  useRealTimeSubscription('WatchSchedule', {
+    enabled: !!user,
+    // Filter for changes relevant to this user (created by them or where they are a viewer)
+    // Note: Supabase realtime filters are limited. simpler to just listen to all public changes on the table
+    // and let the query invalidation handle the fetching of correct data.
+    // However, for efficiency, we can filter by user_id if we have a column for it, but WatchSchedule uses created_by (email).
+    // Filtering by string column in Supabase Realtime: `created_by=eq.${user.email}`
+    // But this won't catch changes where user is a viewer but not creator.
+    // So for now, we'll subscribe to all changes on WatchSchedule and refetch.
+    // Optimisation: We could have multiple subscriptions or server-side filtering, but for this app scale, refetching is fine.
+  }, (payload) => {
+    console.log('Real-time update received:', payload);
+    queryClient.invalidateQueries({ queryKey: ['schedules'] });
+    // Also invalidate media in case status changed
+    queryClient.invalidateQueries({ queryKey: ['media'] });
+  });
 
 
 

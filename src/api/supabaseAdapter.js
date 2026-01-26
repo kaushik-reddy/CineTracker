@@ -139,6 +139,37 @@ const createEntityOperations = (entityName) => {
 
             if (error || !data) return null;
             return data.data;
+        },
+
+        subscribe: (callback, filter) => {
+            // Create a unique channel for this subscription
+            const channelId = `public:${tableName}:${Math.random().toString(36).substr(2, 9)}`;
+
+            const channel = supabase
+                .channel(channelId)
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: tableName,
+                        filter: filter ? filter : undefined
+                    },
+                    (payload) => {
+                        console.log(`[Supabase Realtime] Change received for ${tableName}:`, payload);
+                        callback(payload);
+                    }
+                )
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log(`[Supabase Realtime] Subscribed to ${tableName}`);
+                    }
+                });
+
+            return () => {
+                console.log(`[Supabase Realtime] Unsubscribing from ${tableName}`);
+                supabase.removeChannel(channel);
+            };
         }
     };
 };

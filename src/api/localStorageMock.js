@@ -231,7 +231,9 @@ const entityNames = [
     'UsageAnalytics',
     'Request',
     'Cancellation',
-    'WeeklyRelease'
+    'WeeklyRelease',
+    'WatchParty',
+    'ChatMessage'
 ];
 
 // Create entities object with known entities

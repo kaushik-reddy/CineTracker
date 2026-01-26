@@ -40,6 +40,7 @@ import AchievementsView from "@/components/achievements/AchievementsView";
 import PDFViewer from "@/components/books/PDFViewer";
 import IllustratedBookReader from "@/components/books/IllustratedBookReader";
 import FloatingBubbles from "@/components/home/FloatingBubbles";
+import JoinWatchParty from "@/components/watch-party/JoinWatchParty";
 import AdminSpace from "./AdminSpace";
 import Spending from "./Spending";
 
@@ -100,6 +101,13 @@ export default function Home() {
 
   // Watch Party state
   const [showWatchPartyModal, setShowWatchPartyModal] = useState(false);
+  const [showJoinPartyModal, setShowJoinPartyModal] = useState(false);
+
+  useEffect(() => {
+    const handleOpenJoinParty = () => setShowJoinPartyModal(true);
+    window.addEventListener('open-join-party', handleOpenJoinParty);
+    return () => window.removeEventListener('open-join-party', handleOpenJoinParty);
+  }, []);
 
 
   // Profile page state
@@ -127,7 +135,10 @@ export default function Home() {
     }
   }, [user, preferencesApplied]);
 
-  // Listen for view navigation events
+  // Join Watch Party state
+  const [showJoinPartyModal, setShowJoinPartyModal] = useState(false);
+
+  // Listen for view navigation events and Join Party events
   useEffect(() => {
     const handleNavigateToView = (e) => {
       const { view: targetView } = e.detail;
@@ -135,8 +146,16 @@ export default function Home() {
         setView(targetView);
       }
     };
+
+    const handleOpenJoinParty = () => setShowJoinPartyModal(true);
+
     window.addEventListener('navigate-to-view', handleNavigateToView);
-    return () => window.removeEventListener('navigate-to-view', handleNavigateToView);
+    window.addEventListener('open-join-party', handleOpenJoinParty);
+
+    return () => {
+      window.removeEventListener('navigate-to-view', handleNavigateToView);
+      window.removeEventListener('open-join-party', handleOpenJoinParty);
+    };
   }, []);
 
   // Track user navigation
@@ -2779,13 +2798,12 @@ export default function Home() {
               </Button>
             </div>
           </DialogContent>
+        </DialogContent>
         </Dialog>
-      )}
+  )
+}
 
-
-
-
-      {/* Watch Party Coming Soon Modal */}
+{/* Watch Party Coming Soon Modal */ }
       <Dialog open={showWatchPartyModal} onOpenChange={setShowWatchPartyModal}>
         <DialogContent className="bg-zinc-900 border-zinc-800 text-white sm:max-w-md">
           <DialogHeader>
@@ -2812,8 +2830,10 @@ export default function Home() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <JoinWatchParty open={showJoinPartyModal} onClose={() => setShowJoinPartyModal(false)} />
 
       <Footer lastLibraryUpdate={lastLibraryUpdate} />
-    </div>);
-
+    </div >
+  );
 }

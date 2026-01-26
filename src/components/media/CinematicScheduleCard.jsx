@@ -2,6 +2,7 @@ import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon, Clock, Play, Trash2, Edit2, Pause, Tv, Monitor, Book, Smartphone, Rewind, FastForward, Film, AlertCircle, Armchair, Users } from "lucide-react";
+import WatchPartyButton from "@/components/watch-party/WatchPartyButton";
 import { format, isToday, isTomorrow, isPast } from "date-fns";
 import { motion } from "framer-motion";
 import { PlatformBadge } from "../common/PlatformLogos";
@@ -542,6 +543,13 @@ export default function CinematicScheduleCard({
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                 </Button>
+                <div onClick={e => e.stopPropagation()}>
+                  <WatchPartyButton
+                    media={media}
+                    schedule={schedule}
+                    className="h-9 rounded-lg text-xs px-3"
+                  />
+                </div>
                 <Button
                   size="sm"
                   disabled={!canDelete}

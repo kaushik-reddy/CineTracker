@@ -475,6 +475,16 @@ export default function Home() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['media'] })
   });
 
+  // Delete Watch Party mutation
+  const deleteWatchPartyMutation = useMutation({
+    mutationFn: (id) => base44.entities.WatchParty.delete(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      // Force immediate refetch
+      await queryClient.refetchQueries({ queryKey: ['schedules'] });
+    }
+  });
+
   // Fetch all users for admin
   const { data: allUsers = [] } = useQuery({
     queryKey: ['all-users'],
@@ -909,6 +919,25 @@ export default function Home() {
 
   const handleDeleteSchedule = async (scheduleId) => {
     const schedule = schedules.find((s) => s.id === scheduleId);
+    if (!schedule) return;
+
+    if (schedule.is_watch_party) {
+      const partyId = schedule.party_data.id;
+
+      if (schedule.created_by === user?.email) {
+        // Host: Delete the entire party
+        await deleteWatchPartyMutation.mutateAsync(partyId);
+      } else {
+        // Guest: Just leave the party
+        const updatedParticipants = schedule.party_data.participants?.filter(p => p.email !== user?.email) || [];
+        await base44.entities.WatchParty.update(partyId, {
+          participants: updatedParticipants
+        });
+        await queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      }
+      return;
+    }
+
     if (schedule) {
       await deleteScheduleMutation.mutateAsync(scheduleId);
       await updateMediaMutation.mutateAsync({

@@ -53,6 +53,32 @@ const getTimeOfDay = (date) => {
   return { label: 'LATE NIGHT', color: 'text-zinc-400' };
 };
 
+class ScheduleErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Timeline Card Error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs">
+          Error loading item
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function TimelineViewNew({ schedules = [], mediaMap = {}, onMarkComplete, onReschedule, localElapsed = {}, userRole, userPermissions, playingScheduleId, isHighlighted, onNavigate }) {
   // Sanitize schedules to prevent crashes
   const validSchedules = useMemo(() => {
@@ -426,54 +452,27 @@ export default function TimelineViewNew({ schedules = [], mediaMap = {}, onMarkC
                   </h3>
                   <div className="space-y-4">
                     {timeSchedules.map((schedule) => (
-                      class ScheduleErrorBoundary extends React.Component {
-                        constructor(props) {
-                          super(props);
-                          this.state = { hasError: false };
-                        }
-
-                        static getDerivedStateFromError(error) {
-                          return { hasError: true };
-                        }
-
-                        componentDidCatch(error, errorInfo) {
-                          console.error("Timeline Card Error:", error, errorInfo);
-                        }
-
-                        render() {
-                          if (this.state.hasError) {
-                            return (
-                              <div className="p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-xs">
-                                Error loading item
-                              </div>
-                            );
-                          }
-                          return this.props.children;
-                        }
-                      }
-
-                      // ... inside render loop
-                      < ScheduleErrorBoundary key = { schedule.id } >
-                      <TimelineFlowCard
-                        schedule={schedule}
-                        media={schedule.media}
-                        onMarkComplete={onMarkComplete}
-                        onReschedule={onReschedule}
-                        localElapsed={localElapsed}
-                        userRole={userRole}
-                        userPermissions={userPermissions}
-                        isHighlighted={isHighlighted}
-                        onNavigate={onNavigate}
-                      />
+                      <ScheduleErrorBoundary key={schedule.id}>
+                        <TimelineFlowCard
+                          schedule={schedule}
+                          media={schedule.media}
+                          onMarkComplete={onMarkComplete}
+                          onReschedule={onReschedule}
+                          localElapsed={localElapsed}
+                          userRole={userRole}
+                          userPermissions={userPermissions}
+                          isHighlighted={isHighlighted}
+                          onNavigate={onNavigate}
+                        />
                       </ScheduleErrorBoundary>
                     ))}
+                  </div>
                 </div>
-                </div>
-          ))}
-        </div>
+              ))}
+            </div>
           )}
-      </div>
-    </div >
+        </div>
+      </div >
 
 
       <Dialog open={!!rescheduleDialog} onOpenChange={() => setRescheduleDialog(null)}>
@@ -496,44 +495,44 @@ export default function TimelineViewNew({ schedules = [], mediaMap = {}, onMarkC
         </DialogContent>
       </Dialog>
 
-  {
-    rescheduleDialog && (
-      <Dialog open={!!rescheduleDialog} onOpenChange={() => setRescheduleDialog(null)}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-md w-[95vw] sm:w-full">
-          <DialogHeader>
-            <DialogTitle className="text-white">Reschedule Options</DialogTitle>
-          </DialogHeader>
-          <p className="text-zinc-400 text-sm mb-4">Do you want to keep your current progress?</p>
-          <div className="space-y-3">
-            <Button
-              onClick={() => {
-                onReschedule(rescheduleDialog, false);
-                setRescheduleDialog(null);
-              }}
-              className="w-full bg-emerald-500 hover:bg-emerald-600"
-            >
-              Keep Progress & Reschedule
-            </Button>
-            <Button
-              onClick={() => {
-                onReschedule(rescheduleDialog, true);
-                setRescheduleDialog(null);
-              }}
-              className="w-full bg-orange-500 hover:bg-orange-600"
-            >
-              Reset Progress & Start Fresh
-            </Button>
-            <Button
-              onClick={() => setRescheduleDialog(null)}
-              className="w-full bg-white text-black hover:bg-zinc-100"
-            >
-              Cancel
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    )
-  }
+      {
+        rescheduleDialog && (
+          <Dialog open={!!rescheduleDialog} onOpenChange={() => setRescheduleDialog(null)}>
+            <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-md w-[95vw] sm:w-full">
+              <DialogHeader>
+                <DialogTitle className="text-white">Reschedule Options</DialogTitle>
+              </DialogHeader>
+              <p className="text-zinc-400 text-sm mb-4">Do you want to keep your current progress?</p>
+              <div className="space-y-3">
+                <Button
+                  onClick={() => {
+                    onReschedule(rescheduleDialog, false);
+                    setRescheduleDialog(null);
+                  }}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600"
+                >
+                  Keep Progress & Reschedule
+                </Button>
+                <Button
+                  onClick={() => {
+                    onReschedule(rescheduleDialog, true);
+                    setRescheduleDialog(null);
+                  }}
+                  className="w-full bg-orange-500 hover:bg-orange-600"
+                >
+                  Reset Progress & Start Fresh
+                </Button>
+                <Button
+                  onClick={() => setRescheduleDialog(null)}
+                  className="w-full bg-white text-black hover:bg-zinc-100"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )
+      }
     </>
   );
 }

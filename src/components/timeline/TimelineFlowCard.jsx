@@ -40,18 +40,22 @@ export default function TimelineFlowCard({
   isHighlighted,
   onNavigate
 }) {
-  if (!media) return null;
+  if (!media || !schedule) return null;
 
   const canMarkComplete = userRole === 'admin' || userPermissions?.can_mark_complete;
   const canEdit = userRole === 'admin' || userPermissions?.can_edit;
 
-  // Calculate runtime
-  let runtime = media.runtime_minutes;
-  if (media.type === 'series' && schedule.season_number && schedule.episode_number) {
-    const epRuntime = media.episode_runtimes?.[schedule.season_number - 1]?.[schedule.episode_number - 1];
-    if (epRuntime) runtime = epRuntime;
-  } else if (media.type === 'book') {
-    runtime = schedule.session_duration || 30;
+  // Calculate runtime safely
+  let runtime = media.runtime_minutes || 0; // Default to 0
+  try {
+    if (media.type === 'series' && schedule.season_number && schedule.episode_number) {
+      const epRuntime = media.episode_runtimes?.[schedule.season_number - 1]?.[schedule.episode_number - 1];
+      if (epRuntime) runtime = epRuntime;
+    } else if (media.type === 'book') {
+      runtime = schedule.session_duration || 30;
+    }
+  } catch (e) {
+    console.warn("Error calculating runtime", e);
   }
 
   // Flow states

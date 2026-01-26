@@ -67,19 +67,19 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
     const startDate = startOfDay(monthStart);
-    
+
     // Get the start of the week for the first day of month
     const calendarStart = addDays(startDate, -startDate.getDay());
-    
+
     const result = [];
     let currentDay = calendarStart;
-    
+
     // Get 42 days (6 weeks) to fill calendar grid
     for (let i = 0; i < 42; i++) {
       result.push(currentDay);
       currentDay = addDays(currentDay, 1);
     }
-    
+
     return result;
   }, [currentMonth]);
 
@@ -91,7 +91,10 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
     });
 
     schedules.forEach((schedule) => {
+      if (!schedule.scheduled_date) return;
       const scheduleDate = new Date(schedule.scheduled_date);
+      if (isNaN(scheduleDate.getTime())) return;
+
       const dayKey = days.find((day) => isSameDay(day, scheduleDate))?.toISOString();
 
       if (dayKey && mediaMap[schedule.media_id]) {
@@ -130,11 +133,11 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
   }
 
   const selectedDaySchedules = selectedDate ? (schedulesByDay[selectedDate] || []) : [];
-  
+
   // If no schedules for selected day, find next scheduled day
   const nextScheduledDate = useMemo(() => {
     if (selectedDaySchedules.length > 0) return null;
-    
+
     const futureDays = days.filter(day => day >= new Date(selectedDate));
     for (const day of futureDays) {
       const daySchedules = schedulesByDay[day.toISOString()] || [];
@@ -145,10 +148,10 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
     return null;
   }, [selectedDaySchedules, days, selectedDate, schedulesByDay]);
 
-  const displaySchedules = selectedDaySchedules.length > 0 
-    ? selectedDaySchedules 
+  const displaySchedules = selectedDaySchedules.length > 0
+    ? selectedDaySchedules
     : (nextScheduledDate ? schedulesByDay[nextScheduledDate.toISOString()] || [] : []);
-  
+
   // Check for delayed schedules
   const delayedSchedules = useMemo(() => {
     const today = startOfDay(new Date());
@@ -161,7 +164,7 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
       media: mediaMap[schedule.media_id]
     }));
   }, [schedules, mediaMap]);
-  
+
   // Group by time of day
   const groupedByTimeOfDay = useMemo(() => {
     const groups = {};
@@ -182,92 +185,90 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
         {/* Left: Compact Calendar */}
         <div className="lg:col-span-1">
           <Card className="bg-gradient-to-br from-zinc-900 via-zinc-900 to-purple-900/20 border-purple-500/30 shadow-xl lg:sticky lg:top-24">
-          <CardContent className="p-4">
-          <div className="mb-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <h3 
-                  onClick={() => setShowYearPicker(!showYearPicker)}
-                  className="text-sm font-bold text-white cursor-pointer hover:text-amber-400 transition-colors"
-                >
-                  {format(currentMonth, 'MMMM yyyy')}
-                </h3>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-0 text-xs">
-                  {schedules.length} Total
-                </Badge>
-              </div>
-              <button
-                onClick={() => setCurrentMonth(new Date())}
-                className="px-1.5 py-0.5 bg-emerald-500/20 hover:bg-emerald-500/30 rounded transition-colors text-[10px] text-emerald-400 border border-emerald-500/30"
-              >
-                Today
-              </button>
-            </div>
-
-            {/* Year Picker */}
-            {showYearPicker && (
-              <div className="mb-3 p-2 bg-zinc-800/50 rounded-lg border border-purple-500/30">
-                <div className="grid grid-cols-3 gap-1 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500/30">
-                  {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map(year => (
-                    <button
-                      key={year}
-                      onClick={() => {
-                        setCurrentMonth(setYear(currentMonth, year));
-                        setSelectedYear(year);
-                        setShowYearPicker(false);
-                      }}
-                      className={`px-2 py-1 rounded text-xs transition-all ${
-                        year === getYear(currentMonth) 
-                          ? 'bg-gradient-to-r from-purple-500 to-amber-500 text-white shadow-lg' 
-                          : 'bg-zinc-700/50 text-zinc-300 hover:bg-purple-500/20 hover:border-purple-500/50 border border-transparent'
-                      }`}
+            <CardContent className="p-4">
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <h3
+                      onClick={() => setShowYearPicker(!showYearPicker)}
+                      className="text-sm font-bold text-white cursor-pointer hover:text-amber-400 transition-colors"
                     >
-                      {year}
-                    </button>
-                  ))}
+                      {format(currentMonth, 'MMMM yyyy')}
+                    </h3>
+                    <Badge className="bg-emerald-500/20 text-emerald-400 border-0 text-xs">
+                      {schedules.length} Total
+                    </Badge>
+                  </div>
+                  <button
+                    onClick={() => setCurrentMonth(new Date())}
+                    className="px-1.5 py-0.5 bg-emerald-500/20 hover:bg-emerald-500/30 rounded transition-colors text-[10px] text-emerald-400 border border-emerald-500/30"
+                  >
+                    Today
+                  </button>
+                </div>
+
+                {/* Year Picker */}
+                {showYearPicker && (
+                  <div className="mb-3 p-2 bg-zinc-800/50 rounded-lg border border-purple-500/30">
+                    <div className="grid grid-cols-3 gap-1 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500/30">
+                      {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map(year => (
+                        <button
+                          key={year}
+                          onClick={() => {
+                            setCurrentMonth(setYear(currentMonth, year));
+                            setSelectedYear(year);
+                            setShowYearPicker(false);
+                          }}
+                          className={`px-2 py-1 rounded text-xs transition-all ${year === getYear(currentMonth)
+                              ? 'bg-gradient-to-r from-purple-500 to-amber-500 text-white shadow-lg'
+                              : 'bg-zinc-700/50 text-zinc-300 hover:bg-purple-500/20 hover:border-purple-500/50 border border-transparent'
+                            }`}
+                        >
+                          {year}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Month Navigation */}
+                <div className="flex gap-1 items-center">
+                  <button
+                    onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                    className="p-0.5 w-5 h-5 bg-zinc-800/50 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded transition-all flex items-center justify-center flex-shrink-0"
+                  >
+                    <ChevronLeft className="w-2.5 h-2.5 text-purple-400" />
+                  </button>
+                  <div className="grid grid-cols-3 gap-1 flex-1">
+                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, idx) => (
+                      <button
+                        key={month}
+                        onClick={() => setCurrentMonth(setMonth(currentMonth, idx))}
+                        className={`px-1 py-0.5 rounded text-[10px] transition-all ${currentMonth.getMonth() === idx
+                            ? 'bg-gradient-to-r from-purple-500 to-emerald-500 text-white font-bold shadow-lg'
+                            : 'bg-zinc-800/50 text-zinc-400 hover:bg-purple-500/20 border border-transparent hover:border-purple-500/50'
+                          }`}
+                      >
+                        {month}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                    className="p-0.5 w-5 h-5 bg-zinc-800/50 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded transition-all flex items-center justify-center flex-shrink-0"
+                  >
+                    <ChevronRight className="w-2.5 h-2.5 text-purple-400" />
+                  </button>
                 </div>
               </div>
-            )}
 
-            {/* Month Navigation */}
-            <div className="flex gap-1 items-center">
-              <button
-                onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                className="p-0.5 w-5 h-5 bg-zinc-800/50 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded transition-all flex items-center justify-center flex-shrink-0"
-              >
-                <ChevronLeft className="w-2.5 h-2.5 text-purple-400" />
-              </button>
-              <div className="grid grid-cols-3 gap-1 flex-1">
-                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, idx) => (
-                  <button
-                    key={month}
-                    onClick={() => setCurrentMonth(setMonth(currentMonth, idx))}
-                    className={`px-1 py-0.5 rounded text-[10px] transition-all ${
-                      currentMonth.getMonth() === idx 
-                        ? 'bg-gradient-to-r from-purple-500 to-emerald-500 text-white font-bold shadow-lg' 
-                        : 'bg-zinc-800/50 text-zinc-400 hover:bg-purple-500/20 border border-transparent hover:border-purple-500/50'
-                    }`}
-                  >
-                    {month}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                className="p-0.5 w-5 h-5 bg-zinc-800/50 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded transition-all flex items-center justify-center flex-shrink-0"
-              >
-                <ChevronRight className="w-2.5 h-2.5 text-purple-400" />
-              </button>
-            </div>
-          </div>
-              
               <div className="grid grid-cols-7 gap-1">
                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
                   <div key={i} className="text-center text-[10px] font-semibold text-purple-400 pb-1">
                     {day}
                   </div>
                 ))}
-                
+
                 {days.map((day) => {
                   const daySchedules = schedulesByDay[day.toISOString()] || [];
                   const hasSchedule = daySchedules.length > 0;
@@ -397,12 +398,12 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
               {/* Date Header */}
               <div className="bg-gradient-to-br from-amber-500/10 to-zinc-900/80 border border-amber-500/30 rounded-xl p-4">
                 <h2 className="text-xl font-bold text-white">
-                  {nextScheduledDate && selectedDaySchedules.length === 0 
+                  {nextScheduledDate && selectedDaySchedules.length === 0
                     ? `Next Scheduled: ${format(nextScheduledDate, 'EEEE, MMMM d')}`
                     : isSameDay(new Date(selectedDate), new Date()) ? 'Today' : format(new Date(selectedDate), 'EEEE')}
                 </h2>
                 <p className="text-sm text-zinc-400 mt-1">
-                  {nextScheduledDate && selectedDaySchedules.length === 0 
+                  {nextScheduledDate && selectedDaySchedules.length === 0
                     ? format(nextScheduledDate, 'MMMM d, yyyy')
                     : format(new Date(selectedDate), 'MMMM d, yyyy')}
                 </p>
@@ -432,10 +433,10 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
                   </div>
                 </div>
               ))}
-              </div>
-              )}
-              </div>
-              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
 
       <Dialog open={!!rescheduleDialog} onOpenChange={() => setRescheduleDialog(null)}>
@@ -466,7 +467,7 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
             </DialogHeader>
             <p className="text-zinc-400 text-sm mb-4">Do you want to keep your current progress?</p>
             <div className="space-y-3">
-              <Button 
+              <Button
                 onClick={() => {
                   onReschedule(rescheduleDialog, false);
                   setRescheduleDialog(null);
@@ -475,7 +476,7 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
               >
                 Keep Progress & Reschedule
               </Button>
-              <Button 
+              <Button
                 onClick={() => {
                   onReschedule(rescheduleDialog, true);
                   setRescheduleDialog(null);
@@ -484,7 +485,7 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
               >
                 Reset Progress & Start Fresh
               </Button>
-              <Button 
+              <Button
                 onClick={() => setRescheduleDialog(null)}
                 className="w-full bg-white text-black hover:bg-zinc-100"
               >

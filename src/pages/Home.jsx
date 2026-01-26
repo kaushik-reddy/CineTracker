@@ -352,12 +352,12 @@ export default function Home() {
         id: `party_${p.id}`,
         media_id: p.media_id,
         scheduled_date: p.scheduled_start,
-        status: p.status === 'live' ? 'in_progress' : 'scheduled',
+        status: p.is_playing ? 'in_progress' : (p.status === 'live' ? 'paused' : 'scheduled'),
         created_by: p.host_email,
         is_watch_party: true,
         party_data: p,
-        // Mock fields to prevent crashes
-        elapsed_seconds: 0,
+        elapsed_seconds: p.current_time || 0,
+        last_resumed_at: p.last_sync_at,
         viewers: p.participants || []
       }));
 

@@ -12,6 +12,12 @@ import { base44 } from '../api/base44Client';
  */
 export function useRealTimeSubscription(entityName, { filter, enabled = true } = {}, callback) {
     const unsubscribeRef = useRef(null);
+    const callbackRef = useRef(callback);
+
+    // Update callback ref whenever it changes
+    useEffect(() => {
+        callbackRef.current = callback;
+    }, [callback]);
 
     useEffect(() => {
         // Validation
@@ -29,8 +35,8 @@ export function useRealTimeSubscription(entityName, { filter, enabled = true } =
 
             try {
                 unsubscribeRef.current = base44.entities[entityName].subscribe((payload) => {
-                    if (callback) {
-                        callback(payload);
+                    if (callbackRef.current) {
+                        callbackRef.current(payload);
                     }
                 }, filter);
             } catch (err) {
@@ -46,5 +52,5 @@ export function useRealTimeSubscription(entityName, { filter, enabled = true } =
                 unsubscribeRef.current = null;
             }
         };
-    }, [entityName, filter, enabled, callback]);
+    }, [entityName, filter, enabled]); // removed callback from dependencies
 }

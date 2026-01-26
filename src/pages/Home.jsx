@@ -326,11 +326,11 @@ export default function Home() {
   }, async (payload) => {
     console.log('Real-time update received (Party):', payload);
     // Invalidate generic and user-specific queries
-    await queryClient.invalidateQueries({ queryKey: ['schedules'] });
-    await queryClient.invalidateQueries({ queryKey: ['media'] });
+    await queryClient.invalidateQueries({ queryKey: ['schedules'], exact: false });
+    await queryClient.invalidateQueries({ queryKey: ['media'], exact: false });
 
     // Force immediate refetch for active views
-    await queryClient.refetchQueries({ queryKey: ['schedules'] });
+    await queryClient.refetchQueries({ queryKey: ['schedules'], exact: false });
   });
 
 

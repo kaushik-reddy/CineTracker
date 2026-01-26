@@ -60,13 +60,17 @@ export default function TimelineFlowCard({
   const isCompleted = schedule.status === 'completed';
 
   // Time calculations
-  const scheduledTime = new Date(schedule.scheduled_date);
-  const startedTime = schedule.started_at ? new Date(schedule.started_at) : null;
-  const completedTime = schedule.rating_submitted_at
-    ? new Date(schedule.rating_submitted_at)
-    : schedule.status === 'completed'
-      ? new Date(schedule.updated_date)
-      : null;
+  // Time calculations - Safe parsing
+  const safeDate = (d) => {
+    if (!d) return null;
+    const date = new Date(d);
+    return isNaN(date.getTime()) ? null : date;
+  };
+
+  const scheduledTime = safeDate(schedule.scheduled_date) || new Date(); // Fallback to now if invalid to prevent crash
+  const startedTime = safeDate(schedule.started_at);
+  const completedTime = safeDate(schedule.rating_submitted_at) ||
+    (schedule.status === 'completed' ? safeDate(schedule.updated_date) : null);
 
   // Calculate total time spent (actual elapsed time including breaks)
   let totalTimeSpent = null;
@@ -344,8 +348,8 @@ export default function TimelineFlowCard({
                       disabled={!canMarkComplete}
                       onClick={() => canMarkComplete && onMarkComplete(schedule)}
                       className={`flex-1 text-[10px] px-2 py-1.5 h-auto ${!canMarkComplete
-                          ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50'
-                          : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                        ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50'
+                        : 'bg-emerald-500 hover:bg-emerald-600 text-white'
                         }`}
                     >
                       <CheckCircle className="w-3 h-3 mr-1" />
@@ -357,8 +361,8 @@ export default function TimelineFlowCard({
                     disabled={!canEdit}
                     onClick={() => canEdit && onReschedule(schedule, false)}
                     className={`flex-1 text-[10px] px-2 py-1.5 h-auto ${!canEdit
-                        ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50 border-zinc-700'
-                        : 'bg-white hover:bg-zinc-100 text-black'
+                      ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50 border-zinc-700'
+                      : 'bg-white hover:bg-zinc-100 text-black'
                       }`}
                   >
                     <RotateCcw className="w-3 h-3 mr-1" />

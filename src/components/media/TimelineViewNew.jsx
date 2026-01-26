@@ -157,7 +157,12 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
     const today = startOfDay(new Date());
     return schedules.filter(schedule => {
       if (schedule.status === 'completed') return false;
-      const scheduleDate = startOfDay(new Date(schedule.scheduled_date));
+      if (!schedule.scheduled_date) return false;
+
+      const dateObj = new Date(schedule.scheduled_date);
+      if (isNaN(dateObj.getTime())) return false;
+
+      const scheduleDate = startOfDay(dateObj);
       return isBefore(scheduleDate, today);
     }).map(schedule => ({
       ...schedule,
@@ -220,8 +225,8 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
                             setShowYearPicker(false);
                           }}
                           className={`px-2 py-1 rounded text-xs transition-all ${year === getYear(currentMonth)
-                              ? 'bg-gradient-to-r from-purple-500 to-amber-500 text-white shadow-lg'
-                              : 'bg-zinc-700/50 text-zinc-300 hover:bg-purple-500/20 hover:border-purple-500/50 border border-transparent'
+                            ? 'bg-gradient-to-r from-purple-500 to-amber-500 text-white shadow-lg'
+                            : 'bg-zinc-700/50 text-zinc-300 hover:bg-purple-500/20 hover:border-purple-500/50 border border-transparent'
                             }`}
                         >
                           {year}
@@ -245,8 +250,8 @@ export default function TimelineViewNew({ schedules, mediaMap, onMarkComplete, o
                         key={month}
                         onClick={() => setCurrentMonth(setMonth(currentMonth, idx))}
                         className={`px-1 py-0.5 rounded text-[10px] transition-all ${currentMonth.getMonth() === idx
-                            ? 'bg-gradient-to-r from-purple-500 to-emerald-500 text-white font-bold shadow-lg'
-                            : 'bg-zinc-800/50 text-zinc-400 hover:bg-purple-500/20 border border-transparent hover:border-purple-500/50'
+                          ? 'bg-gradient-to-r from-purple-500 to-emerald-500 text-white font-bold shadow-lg'
+                          : 'bg-zinc-800/50 text-zinc-400 hover:bg-purple-500/20 border border-transparent hover:border-purple-500/50'
                           }`}
                       >
                         {month}

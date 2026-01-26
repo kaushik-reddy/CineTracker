@@ -37,7 +37,7 @@ CineTracker is a unified platform for tracking, scheduling, and experiencing ent
 
 Choose the plan that fits your viewing habits:
 
-| Feature | Free Tier | Pro Plan ($4.99/mo) | Family Plan ($9.99/mo) |
+| Feature | Free Trial | Pro Monthly (₹29.00/mo) | Pro Monthly (₹299.00/yr) |
 | :--- | :---: | :---: | :---: |
 | **Library Limit** | 50 Titles | Unlimited | Unlimited |
 | **Watch Schedule** | Basic | Advanced w/ Conflict Detection | Advanced w/ Conflict Detection |

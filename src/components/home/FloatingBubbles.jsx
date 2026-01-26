@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, TrendingUp, Newspaper } from 'lucide-react';
+import { Sparkles, TrendingUp } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 
 export default function FloatingBubbles() {
   const [activeBubble, setActiveBubble] = useState(null);
 
   const bubbles = [
-    { id: 'ai', icon: Sparkles, color: 'from-purple-500 to-pink-500', label: 'AI Recommender' },
-    { id: 'news', icon: TrendingUp, color: 'from-amber-500 to-orange-500', label: 'Movie Facts' },
-    { id: 'feed', icon: Newspaper, color: 'from-emerald-500 to-teal-500', label: 'Social Feed' }
+    { id: 'ai', icon: Sparkles, color: 'from-purple-500 to-pink-500', label: 'AI Recommendations' },
+    { id: 'news', icon: TrendingUp, color: 'from-amber-500 to-orange-500', label: 'Facts & News' }
   ];
 
   return (
